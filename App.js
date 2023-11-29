@@ -1,18 +1,13 @@
 import React from 'react';
 import { StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import AppNavigator from './app/navigation/AppNavigator';
 
-import { Provider } from 'src/provider';
-import { Screens } from 'src/screens';
-
-export const App = () => {
+export default function App() {
   return (
-    <Provider>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="light-content"
-      />
-      <Screens />
-    </Provider>
+    <NavigationContainer>
+      <AppNavigator />
+      <StatusBar style="auto" />
+    </NavigationContainer>
   );
 };
