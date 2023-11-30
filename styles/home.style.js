@@ -2,16 +2,13 @@ import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
-    fontFamily: "DMRegular",
     width: "100%",
   },
   userName: {
-    fontFamily: "DMRegular",
     fontSize: 24,
     color: "#444444",
   },
   displayName: {
-    fontFamily: "DMBold",
     fontSize: 20,
     color: "#111111",
     marginTop: 2,
@@ -31,7 +28,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   postText: {
-    fontFamily: "DMRegular",
     fontSize: 16,
     color: "#111111",
   },

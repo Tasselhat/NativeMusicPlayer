@@ -1,5 +1,6 @@
-import React from 'react'
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import React from 'react'
 import AudioList from '../screens/AudioList'
 import Player from '../screens/Player'
 import Playlist from '../screens/Playlist'
@@ -9,9 +10,25 @@ const Tab = createBottomTabNavigator()
 const AppNavigator = () => {
   return (
 		<Tab.Navigator>
-			<Tab.Screen name="AudioList" component={AudioList} />
-			<Tab.Screen name="Player" component={Player} />
-			<Tab.Screen name="Playlist" component={Playlist} />
+			<Tab.Screen name="AudioList" component={AudioList}
+			options={{
+				tabBarIcon: ({color, size}) => (
+					<MaterialIcons name="headset" color={color} size={size} />
+				),			
+			}} />
+			<Tab.Screen name="Player" component={Player}
+			options={{
+				tabBarIcon: ({color, size}) => (
+					<FontAwesome5 name="compact-disc" color={color} size={size} />
+				),			
+			}}/>
+			<Tab.Screen name="Playlist" component={Playlist}
+				options={{
+					tabBarIcon: ({color, size}) => (
+						<MaterialIcons name="library-music" color={color} size={size} />
+					),			
+				}}
+			/>
 		</Tab.Navigator>
   )
 }
