@@ -6,6 +6,10 @@ export const AudioContext = createContext();
 export class AudioProvider extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      audioFiles: [],
+      permissionError: false,
+    };
   }
 
   permissionAlert = () => {
@@ -22,11 +26,14 @@ export class AudioProvider extends Component {
   };
 
   getAudioFiles = async () => {
-    const media = await MediaLibrary.getAssetsAsync({
+    let media = await MediaLibrary.getAssetsAsync({
       mediaType: "audio",
     });
-    console.log(media);
-    return media;
+    media = await MediaLibrary.getAssetsAsync({
+      mediaType: "audio",
+      first: media.totalCount,
+    });
+    this.setState({ ...this.state, audioFiles: media.assets });
   };
 
   getPermission = async () => {
@@ -51,12 +58,12 @@ export class AudioProvider extends Component {
       }
       if (status === "denied" && !canAskAgain) {
         // display alert that user must allow permissions to proceed
-        this.permissionAlert();
+        this.setState({ ...this.state, permissionError: true });
       }
     }
     if (!permission.canAskAgain) {
       // display alert that user cannot use app without permissions
-      this.permissionAlert();
+      this.setState({ ...this.state, permissionError: true });
     }
   };
 
@@ -65,7 +72,22 @@ export class AudioProvider extends Component {
   }
 
   render() {
-    return <AudioContext.Provider value={{}}>{this.props.children}</AudioContext.Provider>;
+    if (this.state.permissionError) {
+      return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ fontSize: 25, textAlign: "center" }}>
+            You must enable access to audio files to use this app, please allow access to music and
+            files in app settings and restart the app.
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <AudioContext.Provider value={{ audioFiles: this.state.audioFiles }}>
+        {this.props.children}
+      </AudioContext.Provider>
+    );
   }
 }
 
