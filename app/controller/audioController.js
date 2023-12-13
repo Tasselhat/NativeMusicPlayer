@@ -3,7 +3,7 @@ import { Audio } from "expo-av";
 //play
 export const play = async (playbackObj, uri) => {
   try {
-    return await playbackObj.loadAsync({ uri: audio.uri }, { shouldPlay: true });
+    return await playbackObj.loadAsync({ uri }, { shouldPlay: true });
   } catch (error) {
     console.log("Error inside play helper method (audioController.js)", error.message);
   }

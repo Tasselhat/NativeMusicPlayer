@@ -6,6 +6,7 @@ import AudioListItem from "../../components/AudioListItem";
 import Screen from "../../components/Screen";
 import OptionsModal from "../../components/OptionsModal";
 import { Audio } from "expo-av";
+import { play, pause, resume } from "../controller/audioController";
 
 export class AudioList extends React.Component {
   static contextType = AudioContext;
@@ -40,7 +41,7 @@ export class AudioList extends React.Component {
     //first play
     if (this.state.soundObj === null) {
       const playbackObj = new Audio.Sound();
-      const status = await playbackObj.loadAsync({ uri: audio.uri }, { shouldPlay: true });
+      const status = await play(playbackObj, audio.uri);
       return this.setState({
         ...this.state,
         playbackObj: playbackObj,
@@ -53,7 +54,7 @@ export class AudioList extends React.Component {
     if (this.state.soundObj.isLoaded && this.state.currentAudio.id !== audio.id) {
       const status = await this.state.playbackObj.unloadAsync();
       const playbackObj = new Audio.Sound();
-      const status2 = await playbackObj.loadAsync({ uri: audio.uri }, { shouldPlay: true });
+      const status2 = await play(playbackObj, audio.uri);
       return this.setState({
         ...this.state,
         playbackObj: playbackObj,
@@ -64,17 +65,7 @@ export class AudioList extends React.Component {
 
     //pause
     if (this.state.soundObj.isLoaded && this.state.soundObj.isPlaying) {
-      const status = await this.state.playbackObj.setStatusAsync({ shouldPlay: false });
-      return this.setState({ ...this.state, soundObj: status });
-    }
-
-    //resume
-    if (
-      this.state.soundObj.isLoaded &&
-      !this.state.soundObj.isPlaying &&
-      this.state.currentAudio.id === audio.id
-    ) {
-      const status = await this.state.playbackObj.playAsync();
+      const status = await pause(this.state.playbackObj);
       return this.setState({ ...this.state, soundObj: status });
     }
   };
