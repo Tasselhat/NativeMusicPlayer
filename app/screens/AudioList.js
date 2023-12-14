@@ -6,7 +6,7 @@ import AudioListItem from "../../components/AudioListItem";
 import Screen from "../../components/Screen";
 import OptionsModal from "../../components/OptionsModal";
 import { Audio } from "expo-av";
-import { play, pause, resume } from "../controller/audioController";
+import { play, pause, resume, selectNew } from "../controller/audioController";
 
 export class AudioList extends React.Component {
   static contextType = AudioContext;
@@ -15,9 +15,6 @@ export class AudioList extends React.Component {
     super(props);
     this.state = {
       optionModalVisible: false,
-      playbackObj: null,
-      soundObj: null,
-      currentAudio: {},
     };
     this.currentItem = {};
   }
@@ -38,35 +35,48 @@ export class AudioList extends React.Component {
   );
 
   handleAudioPress = async (audio) => {
+    const { playbackObj, soundObj, currentAudio, updateState } = this.context;
+
     //first play
-    if (this.state.soundObj === null) {
+    if (soundObj === null) {
       const playbackObj = new Audio.Sound();
       const status = await play(playbackObj, audio.uri);
-      return this.setState({
-        ...this.state,
+      return updateState(this.context, {
         playbackObj: playbackObj,
         currentAudio: audio,
         soundObj: status,
       });
     }
 
+    //pause
+    if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
+      const status = await pause(playbackObj);
+      return updateState(this.context, { soundObj: status });
+    }
+
+    //resume
+    if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
+      const status = await resume(playbackObj);
+      return updateState(this.context, { soundObj: status });
+    }
+
     //new song
-    if (this.state.soundObj.isLoaded && this.state.currentAudio.id !== audio.id) {
-      const status = await this.state.playbackObj.unloadAsync();
-      const playbackObj = new Audio.Sound();
-      const status2 = await play(playbackObj, audio.uri);
-      return this.setState({
-        ...this.state,
+    if (soundObj?.isLoaded && currentAudio.id !== audio.id) {
+      const status = await selectNew(playbackObj, audio.uri);
+      return updateState(this.context, {
         playbackObj: playbackObj,
         currentAudio: audio,
-        soundObj: status2,
+        soundObj: status,
       });
     }
 
-    //pause
-    if (this.state.soundObj.isLoaded && this.state.soundObj.isPlaying) {
-      const status = await pause(this.state.playbackObj);
-      return this.setState({ ...this.state, soundObj: status });
+    if (!soundObj?.isLoaded || soundObj.isLoaded === undefined) {
+      const status = await play(playbackObj, audio.uri);
+      return updateState(this.context, {
+        playbackObj: playbackObj,
+        currentAudio: audio,
+        soundObj: status,
+      });
     }
   };
 
