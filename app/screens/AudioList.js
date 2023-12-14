@@ -35,56 +35,66 @@ export class AudioList extends React.Component {
   );
 
   handleAudioPress = async (audio) => {
-    const { playbackObj, soundObj, currentAudio, updateState } = this.context;
-
+    const { playbackObj, soundObj, currentAudio, updateState, audioFiles } = this.context;
     //first play
     if (soundObj === null) {
       const playbackObj = new Audio.Sound();
+      const index = audioFiles.indexOf(audio);
       const status = await play(playbackObj, audio.uri);
       return updateState(this.context, {
         playbackObj: playbackObj,
         currentAudio: audio,
         soundObj: status,
+        isPlaying: true,
+        currentAudioIndex: index,
       });
     }
 
     //pause
     if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
       const status = await pause(playbackObj);
-      return updateState(this.context, { soundObj: status });
+      return updateState(this.context, { soundObj: status, isPlaying: false });
     }
 
     //resume
     if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
       const status = await resume(playbackObj);
-      return updateState(this.context, { soundObj: status });
+      return updateState(this.context, { soundObj: status, isPlaying: true });
     }
 
     //new song
     if (soundObj?.isLoaded && currentAudio.id !== audio.id) {
       const status = await selectNew(playbackObj, audio.uri);
+      const index = audioFiles.indexOf(audio);
       return updateState(this.context, {
         playbackObj: playbackObj,
         currentAudio: audio,
         soundObj: status,
+        isPlaying: true,
+        currentAudioIndex: index,
       });
     }
 
     if (!soundObj?.isLoaded || soundObj.isLoaded === undefined) {
       const status = await play(playbackObj, audio.uri);
+      const index = audioFiles.indexOf(audio);
       return updateState(this.context, {
         playbackObj: playbackObj,
         currentAudio: audio,
         soundObj: status,
+        isPlaying: true,
+        currentAudioIndex: index,
       });
     }
   };
 
-  rowRenderer = (type, item, index) => {
+  rowRenderer = (type, item, index, extendedState) => {
     return (
       <AudioListItem
         title={item.filename}
         duration={item.duration}
+        isPlaying={extendedState.isPlaying}
+        activeListItem={this.context.currentAudioIndex === index}
         onPlayPress={() => {
           this.handleAudioPress(item);
         }}
@@ -102,7 +112,7 @@ export class AudioList extends React.Component {
   render() {
     return (
       <AudioContext.Consumer>
-        {({ dataProvider }) => {
+        {({ dataProvider, isPlaying }) => {
           return (
             <View
               style={{
@@ -116,6 +126,7 @@ export class AudioList extends React.Component {
                   dataProvider={dataProvider}
                   layoutProvider={this.layoutProvider}
                   rowRenderer={this.rowRenderer}
+                  extendedState={{ isPlaying }}
                 />
                 <OptionsModal
                   title={this.currentItem?.filename}

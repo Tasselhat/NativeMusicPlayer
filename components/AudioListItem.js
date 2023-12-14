@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text, Dimensions, TouchableWithoutFeedback } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 import color from "../app/misc/color";
+import { Feather } from "@expo/vector-icons";
 
 const convertTime = (minutes) => {
   if (minutes) {
@@ -21,14 +22,37 @@ const convertTime = (minutes) => {
   }
 };
 
-const AudioListItem = ({ title, duration, onOptionPress, onPlayPress }) => {
+const renderPlayPauseIcon = (isPlaying) => {
+  if (isPlaying) {
+    return <Feather name="pause" size={24} color={color.ACTIVE_FONT} />;
+  }
+  return <Feather name="play" size={24} color={color.ACTIVE_FONT} />;
+};
+
+const AudioListItem = ({
+  title,
+  duration,
+  onOptionPress,
+  onPlayPress,
+  isPlaying,
+  activeListItem,
+}) => {
   return (
     <>
       <View style={styles.container}>
         <TouchableWithoutFeedback onPress={onPlayPress}>
           <View style={styles.leftContainer}>
-            <View style={styles.thumbnail}>
-              <Text style={styles.thumbnailText}>{title[0].toUpperCase()}</Text>
+            <View
+              style={[
+                styles.thumbnail,
+                { backgroundColor: activeListItem ? color.ACTIVE_BG : color.FONT_LIGHT },
+              ]}
+            >
+              {activeListItem ? (
+                renderPlayPauseIcon(isPlaying)
+              ) : (
+                <Text style={styles.thumbnailText}>{title[0].toUpperCase()}</Text>
+              )}
             </View>
             <View style={styles.titleContainer}>
               <Text numberOfLines={1} style={styles.title}>

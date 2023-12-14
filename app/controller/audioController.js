@@ -16,7 +16,7 @@ export const selectNew = async (playbackObj, uri) => {
   try {
     await playbackObj.stopAsync();
     await playbackObj.unloadAsync();
-    await play(playbackObj, uri);
+    return await play(playbackObj, uri);
   } catch (error) {
     console.log("Error inside selectNew helper method (audioController.js)", error.message);
   }
