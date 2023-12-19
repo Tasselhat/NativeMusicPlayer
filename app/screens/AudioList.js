@@ -2,9 +2,9 @@ import React from "react";
 import { StyleSheet, Text, View, ScrollView, Dimensions } from "react-native";
 import { AudioContext } from "../context/AudioProvider";
 import { LayoutProvider, RecyclerListView } from "recyclerlistview";
-import AudioListItem from "../../components/AudioListItem";
-import Screen from "../../components/Screen";
-import OptionsModal from "../../components/OptionsModal";
+import AudioListItem from "../components/AudioListItem";
+import Screen from "../components/Screen";
+import OptionsModal from "../components/OptionsModal";
 import { Audio } from "expo-av";
 import { play, pause, resume, selectNew } from "../controller/audioController";
 
@@ -34,6 +34,15 @@ export class AudioList extends React.Component {
     }
   );
 
+  onPlaybackStatusUpdate = async (playbackStatus) => {
+    if (playbackStatus.isLoaded && playbackStatus.isPlaying) {
+      this.context.updateState(this.context, {
+        playbackPosition: playbackStatus.positionMillis,
+        playbackDuration: playbackStatus.durationMillis,
+      });
+    }
+  };
+
   handleAudioPress = async (audio) => {
     const { playbackObj, soundObj, currentAudio, updateState, audioFiles } = this.context;
     //first play
@@ -41,13 +50,14 @@ export class AudioList extends React.Component {
       const playbackObj = new Audio.Sound();
       const index = audioFiles.indexOf(audio);
       const status = await play(playbackObj, audio.uri);
-      return updateState(this.context, {
+      updateState(this.context, {
         playbackObj: playbackObj,
         currentAudio: audio,
         soundObj: status,
         isPlaying: true,
         currentAudioIndex: index,
       });
+      return playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate);
     }
 
     //pause

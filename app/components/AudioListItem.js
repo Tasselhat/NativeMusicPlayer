@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, View, Text, Dimensions, TouchableWithoutFeedback } from "react-native";
 import { Entypo } from "@expo/vector-icons";
-import color from "../app/misc/color";
+import color from "../misc/color";
 import { Feather } from "@expo/vector-icons";
 
 const convertTime = (minutes) => {

@@ -1,6 +1,6 @@
 import React from "react";
 import { StatusBar, StyleSheet, Text, View, Modal, TouchableWithoutFeedback } from "react-native";
-import color from "../app/misc/color";
+import color from "../misc/color";
 
 const OptionsModal = ({ visible, title, onClose, onPlayPress, onPlaylistPress }) => {
   return (
