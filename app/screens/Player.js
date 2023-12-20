@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { StyleSheet, Text, View, Dimensions } from "react-native";
 import Screen from "../components/Screen";
 import color from "../misc/color";
@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import PlayerButton from "../components/PlayerButton";
 import { AudioContext } from "../context/AudioProvider";
+import { play, pause, resume } from "../controller/audioController";
 
 const { width } = Dimensions.get("window");
 
@@ -20,6 +21,39 @@ const Player = ({}) => {
     }
     return 0;
   };
+
+  const handlePlayPress = async () => {
+    const { soundObj, playbackObj, currentAudio, updateState } = context;
+    if (soundObj === null) {
+      const status = await play(playbackObj, currentAudio.uri);
+      return updateState(context, {
+        soundObj: status,
+        currentAudio: currentAudio,
+        isPlaying: true,
+        currentAudioIndex: context.currentAudioIndex,
+      });
+    }
+    if (soundObj && soundObj.isPlaying) {
+      const status = await pause(playbackObj);
+      return updateState(context, {
+        soundObj: status,
+        isPlaying: false,
+      });
+    }
+    if (soundObj && !soundObj.isPlaying) {
+      const status = await resume(playbackObj);
+      return updateState(context, {
+        soundObj: status,
+        isPlaying: true,
+      });
+    }
+  };
+
+  useEffect(() => {
+    context.loadPreviousAudio();
+  }, []);
+
+  if (!context.currentAudio) return null;
 
   return (
     <Screen>
@@ -50,7 +84,7 @@ const Player = ({}) => {
             <PlayerButton iconType="shuffle-variant" />
             <PlayerButton iconType="skip-backward" />
             <PlayerButton
-              onPress={() => console.log("pressed PLay")}
+              onPress={handlePlayPress}
               iconType={context.isPlaying ? "pause" : "play"}
               size={70}
             />

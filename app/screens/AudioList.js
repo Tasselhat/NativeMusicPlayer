@@ -5,7 +5,6 @@ import { LayoutProvider, RecyclerListView } from "recyclerlistview";
 import AudioListItem from "../components/AudioListItem";
 import Screen from "../components/Screen";
 import OptionsModal from "../components/OptionsModal";
-import { Audio } from "expo-av";
 import { play, pause, resume, selectNew } from "../controller/audioController";
 import { storeAudioForNextOpening } from "../misc/helper";
 
@@ -47,7 +46,8 @@ export class AudioList extends React.Component {
       const nextAudioIndex = this.context.currentAudioIndex + 1;
       //there is no next audio to play or the current audio is the last one
       if (nextAudioIndex >= this.context.totalAudioCount) {
-        return this.context.updateState(this.context, {
+        this.context.playbackObj.unloadAsync();
+        this.context.updateState(this.context, {
           soundObj: null,
           currentAudio: this.context.audioFiles[0],
           isPlaying: false,
@@ -55,6 +55,7 @@ export class AudioList extends React.Component {
           playbackPosition: null,
           playbackDuration: null,
         });
+        return storeAudioForNextOpening(this.context.audioFiles[0], 0);
       }
       const audio = this.context.audioFiles[nextAudioIndex];
       const status = await play(this.context.playbackObj, audio.uri);
@@ -72,7 +73,6 @@ export class AudioList extends React.Component {
 
     //first play
     if (soundObj === null) {
-      const playbackObj = new Audio.Sound();
       const index = audioFiles.indexOf(audio);
       const status = await play(playbackObj, audio.uri);
       updateState(this.context, {
