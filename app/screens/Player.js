@@ -6,7 +6,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import PlayerButton from "../components/PlayerButton";
 import { AudioContext } from "../context/AudioProvider";
-import { play, pause, resume } from "../controller/audioController";
+import { play, pause, resume, playNext } from "../controller/audioController";
+import { convertTime, storeAudioForNextOpening } from "../misc/helper";
 
 const { width } = Dimensions.get("window");
 
@@ -15,7 +16,7 @@ const Player = ({}) => {
 
   const { playbackPosition, playbackDuration } = context;
 
-  const calculateSeekbar = () => {
+  const calculateSeekBar = () => {
     if (playbackPosition !== null && playbackDuration !== null) {
       return playbackPosition / playbackDuration;
     }
@@ -24,6 +25,7 @@ const Player = ({}) => {
 
   const handlePlayPress = async () => {
     const { soundObj, playbackObj, currentAudio, updateState } = context;
+    //play
     if (soundObj === null) {
       const status = await play(playbackObj, currentAudio.uri);
       return updateState(context, {
@@ -33,6 +35,7 @@ const Player = ({}) => {
         currentAudioIndex: context.currentAudioIndex,
       });
     }
+    //pause
     if (soundObj && soundObj.isPlaying) {
       const status = await pause(playbackObj);
       return updateState(context, {
@@ -40,6 +43,7 @@ const Player = ({}) => {
         isPlaying: false,
       });
     }
+    //resume
     if (soundObj && !soundObj.isPlaying) {
       const status = await resume(playbackObj);
       return updateState(context, {
@@ -47,6 +51,86 @@ const Player = ({}) => {
         isPlaying: true,
       });
     }
+  };
+
+  const handleNextPress = async () => {
+    const { playbackObj, updateState, audioFiles, currentAudioIndex } = context;
+    const { isLoaded } = await playbackObj.getStatusAsync();
+    const isLastAudio = context.currentAudioIndex + 1 === context.totalAudioCount;
+    let audio = audioFiles[currentAudioIndex + 1];
+    let status;
+    let index;
+
+    if (!isLoaded && !isLastAudio) {
+      index = currentAudioIndex + 1;
+      status = await play(playbackObj, audio.uri);
+    }
+
+    if (isLoaded && !isLastAudio) {
+      index = currentAudioIndex + 1;
+      status = await playNext(context.playbackObj, audio.uri);
+    }
+
+    if (isLastAudio) {
+      index = 0;
+      audio = context.audioFiles[index];
+      if (isLoaded) {
+        status = await playNext(context.playbackObj, audio.uri);
+      } else {
+        status = await play(context.playbackObj, audio.uri);
+      }
+    }
+
+    updateState(context, {
+      currentAudio: audio,
+      playbackObj: context.playbackObj,
+      soundObj: status,
+      isPlaying: true,
+      currentAudioIndex: index,
+      playbackPosition: null,
+      playbackDuration: null,
+    });
+    storeAudioForNextOpening(audio, index);
+  };
+
+  const handlePreviousPress = async () => {
+    const { playbackObj, updateState, audioFiles, currentAudioIndex, totalAudioCount } = context;
+    const { isLoaded } = await playbackObj.getStatusAsync();
+    const isFirstAudio = currentAudioIndex <= 0;
+    let audio = audioFiles[currentAudioIndex - 1];
+    let status;
+    let index;
+
+    if (!isLoaded && !isFirstAudio) {
+      index = currentAudioIndex - 1;
+      status = await play(playbackObj, audio.uri);
+    }
+
+    if (isLoaded && !isFirstAudio) {
+      index = currentAudioIndex - 1;
+      status = await playNext(playbackObj, audio.uri);
+    }
+
+    if (isFirstAudio) {
+      index = totalAudioCount - 1;
+      audio = audioFiles[index];
+      if (isLoaded) {
+        status = await playNext(playbackObj, audio.uri);
+      } else {
+        status = await play(playbackObj, audio.uri);
+      }
+    }
+
+    updateState(context, {
+      currentAudio: audio,
+      playbackObj: playbackObj,
+      soundObj: status,
+      isPlaying: true,
+      currentAudioIndex: index,
+      playbackPosition: null,
+      playbackDuration: null,
+    });
+    storeAudioForNextOpening(audio, index);
   };
 
   useEffect(() => {
@@ -72,23 +156,32 @@ const Player = ({}) => {
           <Text numberOfLines={1} style={styles.audioFilename}>
             {context.currentAudio.filename}
           </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              paddingHorizontal: 15,
+            }}
+          >
+            <Text>{convertTime(context.currentAudio.duration)}</Text>
+          </View>
           <Slider
             style={{ width: width - 100, height: 40 }}
             minimumValue={0}
             maximumValue={1}
-            value={calculateSeekbar()}
+            value={calculateSeekBar()}
             minimumTrackTintColor={color.FONT_MEDIUM}
             maximumTrackTintColor={color.ACTIVE_BG}
           />
           <View style={styles.audioControllers}>
             <PlayerButton iconType="shuffle-variant" />
-            <PlayerButton iconType="skip-backward" />
+            <PlayerButton onPress={handlePreviousPress} iconType="skip-backward" size={50} />
             <PlayerButton
               onPress={handlePlayPress}
               iconType={context.isPlaying ? "pause" : "play"}
               size={70}
             />
-            <PlayerButton iconType="skip-forward" />
+            <PlayerButton onPress={handleNextPress} iconType="skip-forward" size={50} />
             <PlayerButton iconType="repeat" />
           </View>
         </View>

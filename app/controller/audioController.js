@@ -32,10 +32,23 @@ export const pause = async (playbackObj) => {
 };
 
 //resume
+
 export const resume = async (playbackObj) => {
   try {
     return await playbackObj.playAsync();
   } catch (error) {
     console.log("Error inside resume helper method (audioController.js)", error.message);
+  }
+};
+
+//play next
+
+export const playNext = async (playbackObj, uri) => {
+  try {
+    await playbackObj.stopAsync();
+    await playbackObj.unloadAsync();
+    return await play(playbackObj, uri);
+  } catch (error) {
+    console.log("Error inside playNext helper method (audioController.js)", error.message);
   }
 };
