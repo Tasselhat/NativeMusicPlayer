@@ -20,6 +20,7 @@ export class AudioProvider extends Component {
       currentAudioIndex: null,
       playbackPosition: null,
       playbackDuration: null,
+      randomize: false,
     };
     this.totalAudioCount = null;
   }
@@ -124,6 +125,7 @@ export class AudioProvider extends Component {
       currentAudioIndex,
       playbackDuration,
       playbackPosition,
+      randomize
     } = this.state;
 
     if (permissionError) {
@@ -149,6 +151,7 @@ export class AudioProvider extends Component {
           currentAudioIndex,
           playbackDuration,
           playbackPosition,
+          randomize,
           totalAudioCount: this.totalAudioCount,
           loadPreviousAudio: this.loadPreviousAudio,
           updateState: this.updateState,

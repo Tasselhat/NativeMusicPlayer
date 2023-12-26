@@ -42,7 +42,7 @@ export class AudioList extends React.Component {
       });
     }
 
-    if (playbackStatus.didJustFinish) {
+    if (playbackStatus.didJustFinish && !this.context.randomize) {
       const nextAudioIndex = this.context.currentAudioIndex + 1;
       //there is no next audio to play or the current audio is the last one
       if (nextAudioIndex >= this.context.totalAudioCount) {
@@ -65,6 +65,20 @@ export class AudioList extends React.Component {
         isPlaying: true,
         currentAudioIndex: nextAudioIndex,
       });
+    } else if (playbackStatus.didJustFinish && this.context.randomize) {
+        let nextAudioIndex = Math.floor(Math.random() * this.context.totalAudioCount) + 1;
+        while (nextAudioIndex === this.context.currentAudioIndex) {
+          nextAudioIndex = Math.floor(Math.random() * this.context.totalAudioCount) + 1;
+        }
+        const audio = this.context.audioFiles[nextAudioIndex];
+        const status = await play(this.context.playbackObj, audio.uri);
+        return this.context.updateState(this.context, {
+          soundObj: status,
+          currentAudio: audio,
+          isPlaying: true,
+          currentAudioIndex: nextAudioIndex,
+        });
+      }
     }
   };
 
