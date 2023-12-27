@@ -26,16 +26,20 @@ export class AudioProvider extends Component {
   }
 
   permissionAlert = () => {
-    Alert.alert("Permission Required", "This app requires access to audio files to play audio.", [
-      {
-        text: "Allow File Access",
-        onPress: () => this.getPermission(),
-      },
-      {
-        text: "Cancel",
-        onPress: () => this.permissionAlert(),
-      },
-    ]);
+    Alert.alert(
+      "Permission Required",
+      "This app requires access to audio files to play audio.",
+      [
+        {
+          text: "Allow File Access",
+          onPress: () => this.getPermission(),
+        },
+        {
+          text: "Cancel",
+          onPress: () => this.permissionAlert(),
+        },
+      ]
+    );
   };
 
   getAudioFiles = async () => {
@@ -50,7 +54,10 @@ export class AudioProvider extends Component {
     this.totalAudioCount = media.totalCount;
     this.setState({
       ...this.state,
-      dataProvider: dataProvider.cloneWithRows([...audioFiles, ...media.assets]),
+      dataProvider: dataProvider.cloneWithRows([
+        ...audioFiles,
+        ...media.assets,
+      ]),
       audioFiles: [...audioFiles, ...media.assets],
     });
   };
@@ -81,7 +88,8 @@ export class AudioProvider extends Component {
       return true;
     }
     if (!permission.granted && permission.canAskAgain) {
-      const { status, canAskAgain } = await MediaLibrary.requestPermissionsAsync();
+      const { status, canAskAgain } =
+        await MediaLibrary.requestPermissionsAsync();
       if (status === "denied" && canAskAgain) {
         // display alert that user must allow permissions
         this.permissionAlert();
@@ -99,6 +107,53 @@ export class AudioProvider extends Component {
     if (!permission.canAskAgain) {
       // display alert that user cannot use app without permissions
       this.setState({ ...this.state, permissionError: true });
+    }
+  };
+
+  onPlaybackStatusUpdate = async (playbackStatus) => {
+    if (playbackStatus.isLoaded && playbackStatus.isPlaying) {
+      this.updateState(this, {
+        playbackPosition: playbackStatus.positionMillis,
+        playbackDuration: playbackStatus.durationMillis,
+      });
+    }
+
+    if (playbackStatus.didJustFinish && !this.state.randomize) {
+      const nextAudioIndex = this.state.currentAudioIndex + 1;
+      //there is no next audio to play or the current audio is the last one
+      if (nextAudioIndex >= this.totalAudioCount) {
+        this.state.playbackObj.unloadAsync();
+        this.updateState(this, {
+          soundObj: null,
+          currentAudio: this.state.audioFiles[0],
+          isPlaying: false,
+          currentAudioIndex: 0,
+          playbackPosition: null,
+          playbackDuration: null,
+        });
+        return await storeAudioForNextOpening(this.state.audioFiles[0], 0);
+      }
+      const audio = this.state.audioFiles[nextAudioIndex];
+      const status = await play(this.state.playbackObj, audio.uri);
+      return this.updateState(this, {
+        soundObj: status,
+        currentAudio: audio,
+        isPlaying: true,
+        currentAudioIndex: nextAudioIndex,
+      });
+    } else if (playbackStatus.didJustFinish && this.state.randomize) {
+      let nextAudioIndex = Math.floor(Math.random() * this.totalAudioCount) + 1;
+      while (nextAudioIndex === this.state.currentAudioIndex) {
+        nextAudioIndex = Math.floor(Math.random() * this.totalAudioCount) + 1;
+      }
+      const audio = this.state.audioFiles[nextAudioIndex];
+      const status = await play(this.state.playbackObj, audio.uri);
+      return this.updateState(this, {
+        soundObj: status,
+        currentAudio: audio,
+        isPlaying: true,
+        currentAudioIndex: nextAudioIndex,
+      });
     }
   };
 
@@ -125,15 +180,17 @@ export class AudioProvider extends Component {
       currentAudioIndex,
       playbackDuration,
       playbackPosition,
-      randomize
+      randomize,
     } = this.state;
 
     if (permissionError) {
       return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <Text style={{ fontSize: 25, textAlign: "center" }}>
-            You must enable access to audio files to use this app, please allow access to music and
-            files in app settings and restart the app.
+            You must enable access to audio files to use this app, please allow
+            access to music and files in app settings and restart the app.
           </Text>
         </View>
       );
@@ -155,6 +212,7 @@ export class AudioProvider extends Component {
           totalAudioCount: this.totalAudioCount,
           loadPreviousAudio: this.loadPreviousAudio,
           updateState: this.updateState,
+          playbackStatusUpdate: this.onPlaybackStatusUpdate,
         }}
       >
         {this.props.children}
