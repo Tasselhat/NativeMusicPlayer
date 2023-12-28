@@ -83,8 +83,7 @@ export class AudioList extends React.Component {
   // };
 
   handleAudioPress = async (audio) => {
-    const { playbackObj, soundObj, currentAudio, updateState, audioFiles } =
-      this.context;
+    const { playbackObj, soundObj, currentAudio, updateState, audioFiles } = this.context;
 
     //first play
     if (soundObj === null) {
@@ -97,28 +96,18 @@ export class AudioList extends React.Component {
         isPlaying: true,
         currentAudioIndex: index,
       });
-      playbackObj.setOnPlaybackStatusUpdate(
-        this.context.onPlaybackStatusUpdate
-      );
+      playbackObj.setOnPlaybackStatusUpdate(this.context.onPlaybackStatusUpdate);
       return storeAudioForNextOpening(audio, index);
     }
 
     //pause
-    if (
-      soundObj?.isLoaded &&
-      soundObj.isPlaying &&
-      currentAudio.id === audio.id
-    ) {
+    if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
       const status = await pause(playbackObj);
       return updateState(this.context, { soundObj: status, isPlaying: false });
     }
 
     //resume
-    if (
-      soundObj?.isLoaded &&
-      !soundObj.isPlaying &&
-      currentAudio.id === audio.id
-    ) {
+    if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
       const status = await resume(playbackObj);
       return updateState(this.context, { soundObj: status, isPlaying: true });
     }
@@ -211,9 +200,7 @@ export class AudioList extends React.Component {
                 />
                 <OptionsModal
                   title={this.currentItem?.filename}
-                  onClose={() =>
-                    this.setState({ ...this.state, optionModalVisible: false })
-                  }
+                  onClose={() => this.setState({ ...this.state, optionModalVisible: false })}
                   visible={this.state.optionModalVisible}
                   onPlayPress={() => {
                     this.handleAudioPress(this.currentItem);

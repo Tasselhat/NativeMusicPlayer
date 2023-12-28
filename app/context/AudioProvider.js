@@ -4,6 +4,8 @@ import { Text, View, Alert } from "react-native";
 import { DataProvider } from "recyclerlistview";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
+import { storeAudioForNextOpening } from "../misc/helper";
+import { playNext } from "../controller/audioController";
 
 export const AudioContext = createContext();
 export class AudioProvider extends Component {
@@ -26,20 +28,16 @@ export class AudioProvider extends Component {
   }
 
   permissionAlert = () => {
-    Alert.alert(
-      "Permission Required",
-      "This app requires access to audio files to play audio.",
-      [
-        {
-          text: "Allow File Access",
-          onPress: () => this.getPermission(),
-        },
-        {
-          text: "Cancel",
-          onPress: () => this.permissionAlert(),
-        },
-      ]
-    );
+    Alert.alert("Permission Required", "This app requires access to audio files to play audio.", [
+      {
+        text: "Allow File Access",
+        onPress: () => this.getPermission(),
+      },
+      {
+        text: "Cancel",
+        onPress: () => this.permissionAlert(),
+      },
+    ]);
   };
 
   getAudioFiles = async () => {
@@ -54,10 +52,7 @@ export class AudioProvider extends Component {
     this.totalAudioCount = media.totalCount;
     this.setState({
       ...this.state,
-      dataProvider: dataProvider.cloneWithRows([
-        ...audioFiles,
-        ...media.assets,
-      ]),
+      dataProvider: dataProvider.cloneWithRows([...audioFiles, ...media.assets]),
       audioFiles: [...audioFiles, ...media.assets],
     });
   };
@@ -88,8 +83,7 @@ export class AudioProvider extends Component {
       return true;
     }
     if (!permission.granted && permission.canAskAgain) {
-      const { status, canAskAgain } =
-        await MediaLibrary.requestPermissionsAsync();
+      const { status, canAskAgain } = await MediaLibrary.requestPermissionsAsync();
       if (status === "denied" && canAskAgain) {
         // display alert that user must allow permissions
         this.permissionAlert();
@@ -134,7 +128,7 @@ export class AudioProvider extends Component {
         return await storeAudioForNextOpening(this.state.audioFiles[0], 0);
       }
       const audio = this.state.audioFiles[nextAudioIndex];
-      const status = await play(this.state.playbackObj, audio.uri);
+      const status = await playNext(this.state.playbackObj, audio.uri);
       return this.updateState(this, {
         soundObj: status,
         currentAudio: audio,
@@ -147,7 +141,7 @@ export class AudioProvider extends Component {
         nextAudioIndex = Math.floor(Math.random() * this.totalAudioCount) + 1;
       }
       const audio = this.state.audioFiles[nextAudioIndex];
-      const status = await play(this.state.playbackObj, audio.uri);
+      const status = await playNext(this.state.playbackObj, audio.uri);
       return this.updateState(this, {
         soundObj: status,
         currentAudio: audio,
@@ -185,12 +179,10 @@ export class AudioProvider extends Component {
 
     if (permissionError) {
       return (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Text style={{ fontSize: 25, textAlign: "center" }}>
-            You must enable access to audio files to use this app, please allow
-            access to music and files in app settings and restart the app.
+            You must enable access to audio files to use this app, please allow access to music and
+            files in app settings and restart the app.
           </Text>
         </View>
       );
@@ -212,7 +204,7 @@ export class AudioProvider extends Component {
           totalAudioCount: this.totalAudioCount,
           loadPreviousAudio: this.loadPreviousAudio,
           updateState: this.updateState,
-          playbackStatusUpdate: this.onPlaybackStatusUpdate,
+          onPlaybackStatusUpdate: this.onPlaybackStatusUpdate,
         }}
       >
         {this.props.children}

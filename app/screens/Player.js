@@ -61,7 +61,8 @@ const Player = ({}) => {
   };
 
   const handleNextPress = async () => {
-    const { playbackObj, updateState, audioFiles, currentAudioIndex } = context;
+    const { playbackObj, updateState, audioFiles, currentAudioIndex, onPlaybackStatusUpdate } =
+      context;
     const { isLoaded } = await playbackObj.getStatusAsync();
     const isLastAudio = context.currentAudioIndex + 1 === context.totalAudioCount;
     let audio = audioFiles[currentAudioIndex + 1];
@@ -88,6 +89,7 @@ const Player = ({}) => {
       }
     }
 
+    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
     updateState(context, {
       currentAudio: audio,
       playbackObj: context.playbackObj,
@@ -128,6 +130,7 @@ const Player = ({}) => {
       }
     }
 
+    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
     updateState(context, {
       currentAudio: audio,
       playbackObj: playbackObj,
@@ -181,7 +184,11 @@ const Player = ({}) => {
             maximumTrackTintColor={color.ACTIVE_BG}
           />
           <View style={styles.audioControllers}>
-            <PlayerButton onPress={handleRandomizePress} iconType="shuffle-variant" />
+            <PlayerButton
+              onPress={handleRandomizePress}
+              iconType="shuffle-variant"
+              color={context.randomize ? color.ACTIVE_BG : color.FONT_MEDIUM}
+            />
             <PlayerButton onPress={handlePreviousPress} iconType="skip-backward" size={50} />
             <PlayerButton
               onPress={handlePlayPress}
@@ -189,7 +196,10 @@ const Player = ({}) => {
               size={70}
             />
             <PlayerButton onPress={handleNextPress} iconType="skip-forward" size={50} />
-            <PlayerButton iconType="repeat" />
+            <PlayerButton
+              iconType="repeat"
+              color={context.repeat ? color.ACTIVE_BG : color.FONT_MEDIUM}
+            />
           </View>
         </View>
       </View>
