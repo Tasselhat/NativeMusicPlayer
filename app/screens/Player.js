@@ -53,7 +53,7 @@ const Player = ({}) => {
     }
   };
 
-  handleRandomizePress = () => {
+  const handleRandomizePress = () => {
     const { randomize, updateState } = context;
     updateState(context, {
       randomize: !randomize,
@@ -181,7 +181,7 @@ const Player = ({}) => {
             maximumTrackTintColor={color.ACTIVE_BG}
           />
           <View style={styles.audioControllers}>
-            <PlayerButton iconType="shuffle-variant" />
+            <PlayerButton onPress={handleRandomizePress} iconType="shuffle-variant" />
             <PlayerButton onPress={handlePreviousPress} iconType="skip-backward" size={50} />
             <PlayerButton
               onPress={handlePlayPress}
