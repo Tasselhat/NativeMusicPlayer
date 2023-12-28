@@ -24,10 +24,10 @@ const Player = ({}) => {
   };
 
   const handlePlayPress = async () => {
-    const { soundObj, playbackObj, currentAudio, updateState } = context;
-    //play
+    const { soundObj, playbackObj, currentAudio, updateState, onPlaybackStatusUpdate } = context;
     if (soundObj === null) {
       const status = await play(playbackObj, currentAudio.uri);
+      playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
       return updateState(context, {
         soundObj: status,
         currentAudio: currentAudio,
@@ -51,6 +51,13 @@ const Player = ({}) => {
         isPlaying: true,
       });
     }
+  };
+
+  handleRandomizePress = () => {
+    const { randomize, updateState } = context;
+    updateState(context, {
+      randomize: !randomize,
+    });
   };
 
   const handleNextPress = async () => {

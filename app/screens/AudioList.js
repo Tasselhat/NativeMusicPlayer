@@ -34,42 +34,57 @@ export class AudioList extends React.Component {
     }
   );
 
-  onPlaybackStatusUpdate = async (playbackStatus) => {
-    if (playbackStatus.isLoaded && playbackStatus.isPlaying) {
-      this.context.updateState(this.context, {
-        playbackPosition: playbackStatus.positionMillis,
-        playbackDuration: playbackStatus.durationMillis,
-      });
-    }
+  // onPlaybackStatusUpdate = async (playbackStatus) => {
+  //   if (playbackStatus.isLoaded && playbackStatus.isPlaying) {
+  //     this.context.updateState(this.context, {
+  //       playbackPosition: playbackStatus.positionMillis,
+  //       playbackDuration: playbackStatus.durationMillis,
+  //     });
+  //   }
 
-    if (playbackStatus.didJustFinish) {
-      const nextAudioIndex = this.context.currentAudioIndex + 1;
-      //there is no next audio to play or the current audio is the last one
-      if (nextAudioIndex >= this.context.totalAudioCount) {
-        this.context.playbackObj.unloadAsync();
-        this.context.updateState(this.context, {
-          soundObj: null,
-          currentAudio: this.context.audioFiles[0],
-          isPlaying: false,
-          currentAudioIndex: 0,
-          playbackPosition: null,
-          playbackDuration: null,
-        });
-        return storeAudioForNextOpening(this.context.audioFiles[0], 0);
-      }
-      const audio = this.context.audioFiles[nextAudioIndex];
-      const status = await play(this.context.playbackObj, audio.uri);
-      return this.context.updateState(this.context, {
-        soundObj: status,
-        currentAudio: audio,
-        isPlaying: true,
-        currentAudioIndex: nextAudioIndex,
-      });
-    }
-  };
+  //   if (playbackStatus.didJustFinish && !this.context.randomize) {
+  //     const nextAudioIndex = this.context.currentAudioIndex + 1;
+  //     //there is no next audio to play or the current audio is the last one
+  //     if (nextAudioIndex >= this.context.totalAudioCount) {
+  //       this.context.playbackObj.unloadAsync();
+  //       this.context.updateState(this.context, {
+  //         soundObj: null,
+  //         currentAudio: this.context.audioFiles[0],
+  //         isPlaying: false,
+  //         currentAudioIndex: 0,
+  //         playbackPosition: null,
+  //         playbackDuration: null,
+  //       });
+  //       return storeAudioForNextOpening(this.context.audioFiles[0], 0);
+  //     }
+  //     const audio = this.context.audioFiles[nextAudioIndex];
+  //     const status = await play(this.context.playbackObj, audio.uri);
+  //     return this.context.updateState(this.context, {
+  //       soundObj: status,
+  //       currentAudio: audio,
+  //       isPlaying: true,
+  //       currentAudioIndex: nextAudioIndex,
+  //     });
+  //   } else if (playbackStatus.didJustFinish && this.context.randomize) {
+  //       let nextAudioIndex = Math.floor(Math.random() * this.context.totalAudioCount) + 1;
+  //       while (nextAudioIndex === this.context.currentAudioIndex) {
+  //         nextAudioIndex = Math.floor(Math.random() * this.context.totalAudioCount) + 1;
+  //       }
+  //       const audio = this.context.audioFiles[nextAudioIndex];
+  //       const status = await play(this.context.playbackObj, audio.uri);
+  //       return this.context.updateState(this.context, {
+  //         soundObj: status,
+  //         currentAudio: audio,
+  //         isPlaying: true,
+  //         currentAudioIndex: nextAudioIndex,
+  //       });
+  //     }
+  //   }
+  // };
 
   handleAudioPress = async (audio) => {
-    const { playbackObj, soundObj, currentAudio, updateState, audioFiles } = this.context;
+    const { playbackObj, soundObj, currentAudio, updateState, audioFiles } =
+      this.context;
 
     //first play
     if (soundObj === null) {
@@ -82,18 +97,28 @@ export class AudioList extends React.Component {
         isPlaying: true,
         currentAudioIndex: index,
       });
-      playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate);
+      playbackObj.setOnPlaybackStatusUpdate(
+        this.context.onPlaybackStatusUpdate
+      );
       return storeAudioForNextOpening(audio, index);
     }
 
     //pause
-    if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
+    if (
+      soundObj?.isLoaded &&
+      soundObj.isPlaying &&
+      currentAudio.id === audio.id
+    ) {
       const status = await pause(playbackObj);
       return updateState(this.context, { soundObj: status, isPlaying: false });
     }
 
     //resume
-    if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
+    if (
+      soundObj?.isLoaded &&
+      !soundObj.isPlaying &&
+      currentAudio.id === audio.id
+    ) {
       const status = await resume(playbackObj);
       return updateState(this.context, { soundObj: status, isPlaying: true });
     }
@@ -186,7 +211,9 @@ export class AudioList extends React.Component {
                 />
                 <OptionsModal
                   title={this.currentItem?.filename}
-                  onClose={() => this.setState({ ...this.state, optionModalVisible: false })}
+                  onClose={() =>
+                    this.setState({ ...this.state, optionModalVisible: false })
+                  }
                   visible={this.state.optionModalVisible}
                   onPlayPress={() => {
                     this.handleAudioPress(this.currentItem);
