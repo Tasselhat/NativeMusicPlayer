@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import colors from "../misc/color";
 
 const Playlist = ({}) => (
   <ScrollView contentContainerStyle={styles.container}>
@@ -7,7 +8,7 @@ const Playlist = ({}) => (
       <Text>My Favorites</Text>
       <Text style={styles.audioCount}>0 songs</Text>
     </TouchableOpacity>
-    <TouchableOpacity style={{ marginTop: 15 }}>
+    <TouchableOpacity onPress={() => console.log("Add to playlist")} style={{ marginTop: 15 }}>
       <Text style={styles.playlistButton}>+ Add New Playlist</Text>
     </TouchableOpacity>
   </ScrollView>
@@ -19,7 +20,7 @@ const styles = StyleSheet.create({
   },
   playlistBanner: {
     padding: 5,
-    backgroundColor: color.FONT_MEDIUM,
+    backgroundColor: colors.FONT_MEDIUM,
     borderRadius: 5,
   },
   audioCount: {
@@ -28,7 +29,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   playlistButton: {
-    color: color.ACTIVE_BG,
+    color: colors.ACTIVE_BG,
     letterSpacing: 1,
     fontWeight: "bold",
     fontSize: 14,

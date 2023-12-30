@@ -2,7 +2,7 @@ import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import React from "react";
 import AppNavigator from "./app/navigation/AppNavigator";
 import AudioProvider from "./app/context/AudioProvider";
-import { colors } from "./app/misc/color";
+import colors from "./app/misc/color.js";
 
 const MyTheme = {
   ...DefaultTheme,

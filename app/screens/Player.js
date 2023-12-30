@@ -61,10 +61,35 @@ const Player = ({}) => {
   };
 
   const handleNextPress = async () => {
-    const { playbackObj, updateState, audioFiles, currentAudioIndex, onPlaybackStatusUpdate } =
-      context;
+    const {
+      playbackObj,
+      updateState,
+      audioFiles,
+      currentAudioIndex,
+      onPlaybackStatusUpdate,
+      randomize,
+      totalAudioCount,
+    } = context;
     const { isLoaded } = await playbackObj.getStatusAsync();
-    const isLastAudio = context.currentAudioIndex + 1 === context.totalAudioCount;
+    const previousAudioIndex = currentAudioIndex;
+
+    if (randomize) {
+      const nextAudioIndex = Math.floor(Math.random() * totalAudioCount);
+      const audio = audioFiles[nextAudioIndex];
+      const status = await playNext(playbackObj, audio.uri);
+      return updateState(context, {
+        soundObj: status,
+        currentAudio: audio,
+        playbackObj: playbackObj,
+        isPlaying: true,
+        currentAudioIndex: nextAudioIndex,
+        previousAudioIndex: previousAudioIndex,
+        playbackPosition: null,
+        playbackDuration: null,
+      });
+    }
+
+    const isLastAudio = currentAudioIndex + 1 === totalAudioCount;
     let audio = audioFiles[currentAudioIndex + 1];
     let status;
     let index;
@@ -76,26 +101,27 @@ const Player = ({}) => {
 
     if (isLoaded && !isLastAudio) {
       index = currentAudioIndex + 1;
-      status = await playNext(context.playbackObj, audio.uri);
+      status = await playNext(playbackObj, audio.uri);
     }
 
     if (isLastAudio) {
       index = 0;
-      audio = context.audioFiles[index];
+      audio = audioFiles[index];
       if (isLoaded) {
-        status = await playNext(context.playbackObj, audio.uri);
+        status = await playNext(playbackObj, audio.uri);
       } else {
-        status = await play(context.playbackObj, audio.uri);
+        status = await play(playbackObj, audio.uri);
       }
     }
 
     playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
     updateState(context, {
       currentAudio: audio,
-      playbackObj: context.playbackObj,
+      playbackObj: playbackObj,
       soundObj: status,
       isPlaying: true,
       currentAudioIndex: index,
+      previousAudioIndex: previousAudioIndex,
       playbackPosition: null,
       playbackDuration: null,
     });
@@ -103,20 +129,29 @@ const Player = ({}) => {
   };
 
   const handlePreviousPress = async () => {
-    const { playbackObj, updateState, audioFiles, currentAudioIndex, totalAudioCount } = context;
+    const {
+      playbackObj,
+      updateState,
+      audioFiles,
+      currentAudioIndex,
+      totalAudioCount,
+      previousAudioIndex,
+      onPlaybackStatusUpdate,
+      randomize,
+    } = context;
     const { isLoaded } = await playbackObj.getStatusAsync();
-    const isFirstAudio = currentAudioIndex <= 0;
-    let audio = audioFiles[currentAudioIndex - 1];
+    const newPreviousAudioIndex = currentAudioIndex;
+
+    const newIndex = randomize && previousAudioIndex ? previousAudioIndex : currentAudioIndex - 1;
+    const isFirstAudio = newIndex <= 0;
+    let audio = audioFiles[newIndex];
     let status;
-    let index;
 
     if (!isLoaded && !isFirstAudio) {
-      index = currentAudioIndex - 1;
       status = await play(playbackObj, audio.uri);
     }
 
     if (isLoaded && !isFirstAudio) {
-      index = currentAudioIndex - 1;
       status = await playNext(playbackObj, audio.uri);
     }
 
@@ -137,6 +172,7 @@ const Player = ({}) => {
       soundObj: status,
       isPlaying: true,
       currentAudioIndex: index,
+      previousAudioIndex: newPreviousAudioIndex,
       playbackPosition: null,
       playbackDuration: null,
     });
