@@ -13,6 +13,8 @@ export class AudioProvider extends Component {
     super(props);
     this.state = {
       audioFiles: [],
+      playList: [],
+      addToPlayList: null,
       permissionError: false,
       dataProvider: new DataProvider((r1, r2) => r1 !== r2),
       playbackObj: null,
@@ -192,6 +194,8 @@ export class AudioProvider extends Component {
       previousAudioIndex,
       playbackDuration,
       playbackPosition,
+      playList,
+      addToPlayList,
       randomize,
     } = this.state;
 
@@ -220,6 +224,8 @@ export class AudioProvider extends Component {
           playbackDuration,
           playbackPosition,
           randomize,
+          playList,
+          addToPlayList,
           totalAudioCount: this.totalAudioCount,
           loadPreviousAudio: this.loadPreviousAudio,
           updateState: this.updateState,

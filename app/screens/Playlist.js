@@ -2,9 +2,23 @@ import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
 import colors from "../misc/color";
 import PlaylistAddModal from "../components/PlaylistAddModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Playlist = ({}) => {
   const [modalVisible, setModalVisible] = useState(false);
+
+  const createPlaylist = (playlistName) => {
+    AsyncStorage.getItem("playlist")
+      .then((response) => {
+        const existingPlaylist = response ? JSON.parse(response) : [];
+        const newPlaylist = { id: Date.now(), name: playlistName, audios: [] };
+        const updatedPlaylist = [...existingPlaylist, newPlaylist];
+        AsyncStorage.setItem("playlist", JSON.stringify(updatedPlaylist));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -15,7 +29,11 @@ const Playlist = ({}) => {
       <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginTop: 15 }}>
         <Text style={styles.playlistButton}>+ Add New Playlist</Text>
       </TouchableOpacity>
-      <PlaylistAddModal modalVisible={modalVisible} />
+      <PlaylistAddModal
+        modalVisible={modalVisible}
+        onSubmit={(playlistName) => console.log(playlistName)}
+        onClose={() => setModalVisible(false)}
+      />
     </ScrollView>
   );
 };
@@ -26,7 +44,7 @@ const styles = StyleSheet.create({
   },
   playlistBanner: {
     padding: 5,
-    backgroundColor: colors.FONT_MEDIUM,
+    backgroundColor: colors.ACTIVE_FONT,
     borderRadius: 5,
   },
   audioCount: {
