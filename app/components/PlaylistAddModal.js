@@ -1,4 +1,12 @@
-import { Dimensions, Modal, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Dimensions,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import color from "../misc/color";
@@ -12,6 +20,9 @@ const PlaylistAddModal = ({ modalVisible }) => {
           <AntDesign name="check" size={24} color="white" style={styles.submitIcon} />
         </View>
       </View>
+      <TouchableWithoutFeedback>
+        <View style={[...StyleSheet.absoluteFillObject, styles.modalBG]} />
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -37,7 +48,7 @@ const styles = StyleSheet.create({
   input: {
     width: width - 50,
     borderBottomWidth: 1,
-    borderBottomColor: color.ACTIVE_FONT,
+    borderBottomColor: color.ACTIVE_BG,
     fontSize: 18,
     paddingVertical: 8,
   },
@@ -46,5 +57,9 @@ const styles = StyleSheet.create({
     backgroundColor: color.ACTIVE_BG,
     borderRadius: 50,
     marginTop: 15,
+  },
+  modalBG: {
+    backgroundColor: color.MODAL_BG,
+    zIndex: -1,
   },
 });
