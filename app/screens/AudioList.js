@@ -158,8 +158,10 @@ export class AudioList extends React.Component {
                     this.handleAudioPress(this.currentItem);
                   }}
                   onPlaylistPress={() => {
-                    this.context.addToPlaylist(this.currentItem);
-                    this.setState({ ...this.state, optionModalVisible: false });
+                    this.context.updateState(this.context, {
+                      addToPlayList: this.currentItem,
+                    });
+                    this.props.navigation.navigate("Playlists");
                   }}
                 />
               </Screen>

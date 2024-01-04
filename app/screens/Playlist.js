@@ -1,24 +1,61 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, FlatList, TouchableOpacity, View } from "react-native";
 import colors from "../misc/color";
 import PlaylistAddModal from "../components/PlaylistAddModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AudioContext } from "../context/AudioProvider";
 
 const Playlist = ({}) => {
   const [modalVisible, setModalVisible] = useState(false);
 
-  const createPlaylist = (playlistName) => {
+  const context = useContext(AudioContext);
+  const { playList, addToPlayList, updateState } = context;
+
+  const createPlaylist = async (playlistName) => {
     AsyncStorage.getItem("playlist")
-      .then((response) => {
-        const existingPlaylist = response ? JSON.parse(response) : [];
-        const newPlaylist = { id: Date.now(), name: playlistName, audios: [] };
-        const updatedPlaylist = [...existingPlaylist, newPlaylist];
-        AsyncStorage.setItem("playlist", JSON.stringify(updatedPlaylist));
+      .then(async (response) => {
+        if (response) {
+          const audios = [];
+          if (addToPlayList) {
+            audios.push(addToPlayList);
+          }
+          const newPlaylist = { id: Date.now(), title: playlistName, audios: audios };
+          const updatedPlaylist = [...playList, newPlaylist];
+          updateState(context, { addToPlayList: null, playList: updatedPlaylist });
+          await AsyncStorage.setItem("playlist", JSON.stringify(updatedPlaylist));
+        }
+        setModalVisible(false);
       })
       .catch((error) => {
         console.log(error);
       });
   };
+
+  const renderPlaylist = async () => {
+    AsyncStorage.getItem("playlist")
+      .then(async (response) => {
+        if (!response) {
+          const defaultPlaylist = {
+            id: Date.now(),
+            title: "My Favorites",
+            audios: [],
+          };
+          const newPlaylist = [...playList, defaultPlaylist];
+          updateState(context, { playList: newPlaylist });
+          return await AsyncStorage.setItem("playlist", JSON.stringify([...newPlaylist]));
+        }
+        updateState(context, { playList: JSON.parse(response) });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  useEffect(() => {
+    if (!playList.length) {
+      renderPlaylist();
+    }
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -26,12 +63,22 @@ const Playlist = ({}) => {
         <Text>My Favorites</Text>
         <Text style={styles.audioCount}>0 songs</Text>
       </TouchableOpacity>
+      <FlatList
+        data={playList}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View>
+            <Text style={{ color: "black" }}>{item.title}</Text>
+          </View>
+        )}
+      />
+
       <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginTop: 15 }}>
         <Text style={styles.playlistButton}>+ Add New Playlist</Text>
       </TouchableOpacity>
       <PlaylistAddModal
         modalVisible={modalVisible}
-        onSubmit={(playlistName) => console.log(playlistName)}
+        onSubmit={(playlistName) => createPlaylist(playlistName)}
         onClose={() => setModalVisible(false)}
       />
     </ScrollView>
