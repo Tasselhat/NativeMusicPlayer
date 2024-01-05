@@ -51,6 +51,43 @@ const Playlist = ({}) => {
       });
   };
 
+  const handleBannerPress = (playlist) => {
+    // update playlist if there is a selected audio, otherwise open playlist
+
+    if (addToPlayList) {
+      AsyncStorage.getItem("playlist")
+        .then(async (response) => {
+          let oldPlaylist = [];
+          let updatedPlaylist = [];
+          if (response) {
+            oldPlaylist = JSON.parse(response);
+            updatedPlaylist = oldPlaylist.filter((list) => {
+              if (list.id === playlist.id) {
+                for (let audio of list.audios) {
+                  if (audio.id === addToPlayList.id) {
+                    alert("Audio already exists in this playlist");
+                    updateState(context, { addToPlayList: null });
+                    return;
+                  }
+                }
+
+                list.audios.push(addToPlayList);
+              }
+
+              return list;
+            });
+          }
+          updateState(context, { addToPlayList: null, playList: [...updatedPlaylist] });
+          return await AsyncStorage.setItem("playlist", JSON.stringify([...updatedPlaylist]));
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      console.log("Opening playlist");
+    }
+  };
+
   useEffect(() => {
     if (!playList.length) {
       renderPlaylist();
@@ -59,20 +96,22 @@ const Playlist = ({}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity style={styles.playlistBanner}>
-        <Text>My Favorites</Text>
-        <Text style={styles.audioCount}>0 songs</Text>
-      </TouchableOpacity>
-      <FlatList
-        data={playList}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View>
-            <Text style={{ color: "black" }}>{item.title}</Text>
-          </View>
-        )}
-      />
-
+      {playList.length
+        ? playList.map((item) => (
+            <TouchableOpacity
+              onPress={() => handleBannerPress(item)}
+              key={item.id.toString()}
+              style={styles.playlistBanner}
+            >
+              <Text>{item.title}</Text>
+              <Text style={styles.audioCount}>
+                {item.audios.length == 1
+                  ? `${item.audios.length} song`
+                  : `${item.audios.length} songs`}
+              </Text>
+            </TouchableOpacity>
+          ))
+        : null}
       <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginTop: 15 }}>
         <Text style={styles.playlistButton}>+ Add New Playlist</Text>
       </TouchableOpacity>
@@ -93,6 +132,7 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: colors.ACTIVE_FONT,
     borderRadius: 5,
+    marginBottom: 10,
   },
   audioCount: {
     marginTop: 3,
