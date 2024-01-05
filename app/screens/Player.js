@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import PlayerButton from "../components/PlayerButton";
 import { AudioContext } from "../context/AudioProvider";
-import { play, pause, resume, playNext } from "../controller/audioController";
+import { play, pause, resume, playNext, selectAudio } from "../controller/audioController";
 import { convertTime, storeAudioForNextOpening } from "../misc/helper";
 
 const { width } = Dimensions.get("window");
@@ -24,33 +24,7 @@ const Player = ({}) => {
   };
 
   const handlePlayPress = async () => {
-    const { soundObj, playbackObj, currentAudio, updateState, onPlaybackStatusUpdate } = context;
-    if (soundObj === null) {
-      const status = await play(playbackObj, currentAudio.uri);
-      playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
-      return updateState(context, {
-        soundObj: status,
-        currentAudio: currentAudio,
-        isPlaying: true,
-        currentAudioIndex: context.currentAudioIndex,
-      });
-    }
-    //pause
-    if (soundObj && soundObj.isPlaying) {
-      const status = await pause(playbackObj);
-      return updateState(context, {
-        soundObj: status,
-        isPlaying: false,
-      });
-    }
-    //resume
-    if (soundObj && !soundObj.isPlaying) {
-      const status = await resume(playbackObj);
-      return updateState(context, {
-        soundObj: status,
-        isPlaying: true,
-      });
-    }
+    await selectAudio(context.currentAudio, context);
   };
 
   const handleRandomizePress = () => {

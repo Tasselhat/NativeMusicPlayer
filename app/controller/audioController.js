@@ -1,4 +1,5 @@
 import { Audio } from "expo-av";
+import { storeAudioForNextOpening } from "../misc/helper";
 
 //play
 export const play = async (playbackObj, uri) => {
@@ -50,5 +51,143 @@ export const playNext = async (playbackObj, uri) => {
     return await play(playbackObj, uri);
   } catch (error) {
     console.log("Error inside playNext helper method (audioController.js)", error.message);
+  }
+};
+
+//selecting audios
+
+export const selectAudio = async (audio, context) => {
+  const { playbackObj, soundObj, currentAudio, updateState, audioFiles, onPlaybackStatusUpdate } =
+    context;
+
+  try {
+    //first play
+    if (soundObj === null) {
+      const index = audioFiles.indexOf(audio);
+      const status = await play(playbackObj, audio.uri);
+      updateState(context, {
+        currentAudio: audio,
+        soundObj: status,
+        isPlaying: true,
+        currentAudioIndex: index,
+      });
+      playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+      return storeAudioForNextOpening(audio, index);
+    }
+
+    //pause
+    if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
+      const status = await pause(playbackObj);
+      return updateState(context, { soundObj: status, isPlaying: false });
+    }
+
+    //resume
+    if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
+      const status = await resume(playbackObj);
+      return updateState(context, { soundObj: status, isPlaying: true });
+    }
+
+    //new song
+    if (soundObj?.isLoaded && currentAudio.id !== audio.id) {
+      const status = await selectNew(playbackObj, audio.uri);
+      const index = audioFiles.indexOf(audio);
+      updateState(context, {
+        playbackObj: playbackObj,
+        currentAudio: audio,
+        soundObj: status,
+        isPlaying: true,
+        currentAudioIndex: index,
+      });
+      return storeAudioForNextOpening(audio, index);
+    }
+
+    if (!soundObj?.isLoaded || soundObj.isLoaded === undefined) {
+      const status = await play(playbackObj, audio.uri);
+      const index = audioFiles.indexOf(audio);
+      updateState(context, {
+        playbackObj: playbackObj,
+        currentAudio: audio,
+        soundObj: status,
+        isPlaying: true,
+        currentAudioIndex: index,
+      });
+      return storeAudioForNextOpening(audio, index);
+    }
+  } catch (error) {
+    console.log("Error inside selectAudio helper method (audioController.js)", error.message);
+  }
+};
+
+//change audios
+
+export const nextAudioPress = async (context) => {
+  const {
+    playbackObj,
+    updateState,
+    audioFiles,
+    currentAudioIndex,
+    onPlaybackStatusUpdate,
+    randomize,
+    totalAudioCount,
+  } = context;
+
+  try {
+    const { isLoaded } = await playbackObj.getStatusAsync();
+    const previousAudioIndex = currentAudioIndex;
+
+    if (randomize) {
+      const nextAudioIndex = Math.floor(Math.random() * totalAudioCount);
+      const audio = audioFiles[nextAudioIndex];
+      const status = await playNext(playbackObj, audio.uri);
+      return updateState(context, {
+        soundObj: status,
+        currentAudio: audio,
+        playbackObj: playbackObj,
+        isPlaying: true,
+        currentAudioIndex: nextAudioIndex,
+        previousAudioIndex: previousAudioIndex,
+        playbackPosition: null,
+        playbackDuration: null,
+      });
+    }
+
+    const isLastAudio = currentAudioIndex + 1 === totalAudioCount;
+    let audio = audioFiles[currentAudioIndex + 1];
+    let status;
+    let index;
+
+    if (!isLoaded && !isLastAudio) {
+      index = currentAudioIndex + 1;
+      status = await play(playbackObj, audio.uri);
+    }
+
+    if (isLoaded && !isLastAudio) {
+      index = currentAudioIndex + 1;
+      status = await playNext(playbackObj, audio.uri);
+    }
+
+    if (isLastAudio) {
+      index = 0;
+      audio = audioFiles[index];
+      if (isLoaded) {
+        status = await playNext(playbackObj, audio.uri);
+      } else {
+        status = await play(playbackObj, audio.uri);
+      }
+    }
+
+    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+    updateState(context, {
+      currentAudio: audio,
+      soundObj: status,
+      isPlaying: true,
+      currentAudioIndex: index,
+      previousAudioIndex: previousAudioIndex,
+      playbackPosition: null,
+      playbackDuration: null,
+    });
+    storeAudioForNextOpening(audio, index);
+  } catch (error) {
+    console.log("Error inside changeAudio helper method (audioController.js)", error.message);
   }
 };

@@ -5,8 +5,7 @@ import AudioListItem from "../components/AudioListItem";
 import OptionsModal from "../components/OptionsModal";
 import Screen from "../components/Screen";
 import { AudioContext } from "../context/AudioProvider";
-import { pause, play, resume, selectNew } from "../controller/audioController";
-import { storeAudioForNextOpening } from "../misc/helper";
+import { selectAudio } from "../controller/audioController";
 
 export class AudioList extends React.Component {
   static contextType = AudioContext;
@@ -35,61 +34,7 @@ export class AudioList extends React.Component {
   );
 
   handleAudioPress = async (audio) => {
-    const { playbackObj, soundObj, currentAudio, updateState, audioFiles } = this.context;
-
-    //first play
-    if (soundObj === null) {
-      const index = audioFiles.indexOf(audio);
-      const status = await play(playbackObj, audio.uri);
-      updateState(this.context, {
-        playbackObj: playbackObj,
-        currentAudio: audio,
-        soundObj: status,
-        isPlaying: true,
-        currentAudioIndex: index,
-      });
-      playbackObj.setOnPlaybackStatusUpdate(this.context.onPlaybackStatusUpdate);
-      return storeAudioForNextOpening(audio, index);
-    }
-
-    //pause
-    if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
-      const status = await pause(playbackObj);
-      return updateState(this.context, { soundObj: status, isPlaying: false });
-    }
-
-    //resume
-    if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
-      const status = await resume(playbackObj);
-      return updateState(this.context, { soundObj: status, isPlaying: true });
-    }
-
-    //new song
-    if (soundObj?.isLoaded && currentAudio.id !== audio.id) {
-      const status = await selectNew(playbackObj, audio.uri);
-      const index = audioFiles.indexOf(audio);
-      updateState(this.context, {
-        playbackObj: playbackObj,
-        currentAudio: audio,
-        soundObj: status,
-        isPlaying: true,
-        currentAudioIndex: index,
-      });
-      return storeAudioForNextOpening(audio, index);
-    }
-
-    if (!soundObj?.isLoaded || soundObj.isLoaded === undefined) {
-      const status = await play(playbackObj, audio.uri);
-      const index = audioFiles.indexOf(audio);
-      updateState(this.context, {
-        playbackObj: playbackObj,
-        currentAudio: audio,
-        soundObj: status,
-        isPlaying: true,
-        currentAudioIndex: index,
-      });
-      return storeAudioForNextOpening(audio, index);
-    }
+    await selectAudio(audio, this.context);
   };
 
   componentDidMount() {
