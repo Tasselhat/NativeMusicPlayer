@@ -4,9 +4,13 @@ import colors from "../misc/color";
 import PlaylistAddModal from "../components/PlaylistAddModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AudioContext } from "../context/AudioProvider";
+import PlaylistDetails from "../components/PlaylistDetails";
+
+let selectedPlaylist = {};
 
 const Playlist = ({}) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [showPlaylist, setShowPlaylist] = useState(false);
 
   const context = useContext(AudioContext);
   const { playList, addToPlayList, updateState } = context;
@@ -84,7 +88,8 @@ const Playlist = ({}) => {
           console.log(error);
         });
     } else {
-      console.log("Opening playlist");
+      selectedPlaylist = playlist;
+      setShowPlaylist(true);
     }
   };
 
@@ -95,32 +100,39 @@ const Playlist = ({}) => {
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {playList.length
-        ? playList.map((item) => (
-            <TouchableOpacity
-              onPress={() => handleBannerPress(item)}
-              key={item.id.toString()}
-              style={styles.playlistBanner}
-            >
-              <Text>{item.title}</Text>
-              <Text style={styles.audioCount}>
-                {item.audios.length == 1
-                  ? `${item.audios.length} song`
-                  : `${item.audios.length} songs`}
-              </Text>
-            </TouchableOpacity>
-          ))
-        : null}
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginTop: 15 }}>
-        <Text style={styles.playlistButton}>+ Add New Playlist</Text>
-      </TouchableOpacity>
-      <PlaylistAddModal
-        modalVisible={modalVisible}
-        onSubmit={(playlistName) => createPlaylist(playlistName)}
-        onClose={() => setModalVisible(false)}
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        {playList.length
+          ? playList.map((item) => (
+              <TouchableOpacity
+                onPress={() => handleBannerPress(item)}
+                key={item.id.toString()}
+                style={styles.playlistBanner}
+              >
+                <Text>{item.title}</Text>
+                <Text style={styles.audioCount}>
+                  {item.audios.length == 1
+                    ? `${item.audios.length} song`
+                    : `${item.audios.length} songs`}
+                </Text>
+              </TouchableOpacity>
+            ))
+          : null}
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginTop: 15 }}>
+          <Text style={styles.playlistButton}>+ Add New Playlist</Text>
+        </TouchableOpacity>
+        <PlaylistAddModal
+          modalVisible={modalVisible}
+          onSubmit={(playlistName) => createPlaylist(playlistName)}
+          onClose={() => setModalVisible(false)}
+        />
+      </ScrollView>
+      <PlaylistDetails
+        modalVisible={showPlaylist}
+        onClose={() => setShowPlaylist(false)}
+        playlist={selectedPlaylist}
       />
-    </ScrollView>
+    </>
   );
 };
 
