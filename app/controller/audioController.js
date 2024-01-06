@@ -191,3 +191,62 @@ export const nextAudioPress = async (context) => {
     console.log("Error inside changeAudio helper method (audioController.js)", error.message);
   }
 };
+
+export const previousAudioPress = async (context) => {
+  const {
+    playbackObj,
+    updateState,
+    audioFiles,
+    currentAudioIndex,
+    totalAudioCount,
+    previousAudioIndex,
+    onPlaybackStatusUpdate,
+    randomize,
+  } = context;
+
+  try {
+    const { isLoaded } = await playbackObj.getStatusAsync();
+    const newPreviousAudioIndex = currentAudioIndex;
+
+    const newIndex = randomize && previousAudioIndex ? previousAudioIndex : currentAudioIndex - 1;
+    const isFirstAudio = newIndex <= 0;
+    let audio = audioFiles[newIndex];
+    let status;
+
+    if (!isLoaded && !isFirstAudio) {
+      status = await play(playbackObj, audio.uri);
+    }
+
+    if (isLoaded && !isFirstAudio) {
+      status = await playNext(playbackObj, audio.uri);
+    }
+
+    if (isFirstAudio) {
+      index = totalAudioCount - 1;
+      audio = audioFiles[index];
+      if (isLoaded) {
+        status = await playNext(playbackObj, audio.uri);
+      } else {
+        status = await play(playbackObj, audio.uri);
+      }
+    }
+
+    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+    updateState(context, {
+      currentAudio: audio,
+      playbackObj: playbackObj,
+      soundObj: status,
+      isPlaying: true,
+      currentAudioIndex: index,
+      previousAudioIndex: newPreviousAudioIndex,
+      playbackPosition: null,
+      playbackDuration: null,
+    });
+    storeAudioForNextOpening(audio, index);
+  } catch (error) {
+    console.log(
+      "Error inside previousAudioPress helper method (audioController.js)",
+      error.message
+    );
+  }
+};

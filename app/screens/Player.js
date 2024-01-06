@@ -1,13 +1,13 @@
-import React, { useContext, useEffect } from "react";
-import { StyleSheet, Text, View, Dimensions } from "react-native";
-import Screen from "../components/Screen";
-import color from "../misc/color";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
+import React, { useContext, useEffect } from "react";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import PlayerButton from "../components/PlayerButton";
+import Screen from "../components/Screen";
 import { AudioContext } from "../context/AudioProvider";
-import { play, pause, resume, playNext, selectAudio } from "../controller/audioController";
-import { convertTime, storeAudioForNextOpening } from "../misc/helper";
+import { nextAudioPress, previousAudioPress, selectAudio } from "../controller/audioController";
+import color from "../misc/color";
+import { convertTime } from "../misc/helper";
 
 const { width } = Dimensions.get("window");
 
@@ -35,122 +35,11 @@ const Player = ({}) => {
   };
 
   const handleNextPress = async () => {
-    const {
-      playbackObj,
-      updateState,
-      audioFiles,
-      currentAudioIndex,
-      onPlaybackStatusUpdate,
-      randomize,
-      totalAudioCount,
-    } = context;
-    const { isLoaded } = await playbackObj.getStatusAsync();
-    const previousAudioIndex = currentAudioIndex;
-
-    if (randomize) {
-      const nextAudioIndex = Math.floor(Math.random() * totalAudioCount);
-      const audio = audioFiles[nextAudioIndex];
-      const status = await playNext(playbackObj, audio.uri);
-      return updateState(context, {
-        soundObj: status,
-        currentAudio: audio,
-        playbackObj: playbackObj,
-        isPlaying: true,
-        currentAudioIndex: nextAudioIndex,
-        previousAudioIndex: previousAudioIndex,
-        playbackPosition: null,
-        playbackDuration: null,
-      });
-    }
-
-    const isLastAudio = currentAudioIndex + 1 === totalAudioCount;
-    let audio = audioFiles[currentAudioIndex + 1];
-    let status;
-    let index;
-
-    if (!isLoaded && !isLastAudio) {
-      index = currentAudioIndex + 1;
-      status = await play(playbackObj, audio.uri);
-    }
-
-    if (isLoaded && !isLastAudio) {
-      index = currentAudioIndex + 1;
-      status = await playNext(playbackObj, audio.uri);
-    }
-
-    if (isLastAudio) {
-      index = 0;
-      audio = audioFiles[index];
-      if (isLoaded) {
-        status = await playNext(playbackObj, audio.uri);
-      } else {
-        status = await play(playbackObj, audio.uri);
-      }
-    }
-
-    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
-    updateState(context, {
-      currentAudio: audio,
-      playbackObj: playbackObj,
-      soundObj: status,
-      isPlaying: true,
-      currentAudioIndex: index,
-      previousAudioIndex: previousAudioIndex,
-      playbackPosition: null,
-      playbackDuration: null,
-    });
-    storeAudioForNextOpening(audio, index);
+    await nextAudioPress(context);
   };
 
   const handlePreviousPress = async () => {
-    const {
-      playbackObj,
-      updateState,
-      audioFiles,
-      currentAudioIndex,
-      totalAudioCount,
-      previousAudioIndex,
-      onPlaybackStatusUpdate,
-      randomize,
-    } = context;
-    const { isLoaded } = await playbackObj.getStatusAsync();
-    const newPreviousAudioIndex = currentAudioIndex;
-
-    const newIndex = randomize && previousAudioIndex ? previousAudioIndex : currentAudioIndex - 1;
-    const isFirstAudio = newIndex <= 0;
-    let audio = audioFiles[newIndex];
-    let status;
-
-    if (!isLoaded && !isFirstAudio) {
-      status = await play(playbackObj, audio.uri);
-    }
-
-    if (isLoaded && !isFirstAudio) {
-      status = await playNext(playbackObj, audio.uri);
-    }
-
-    if (isFirstAudio) {
-      index = totalAudioCount - 1;
-      audio = audioFiles[index];
-      if (isLoaded) {
-        status = await playNext(playbackObj, audio.uri);
-      } else {
-        status = await play(playbackObj, audio.uri);
-      }
-    }
-
-    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
-    updateState(context, {
-      currentAudio: audio,
-      playbackObj: playbackObj,
-      soundObj: status,
-      isPlaying: true,
-      currentAudioIndex: index,
-      previousAudioIndex: newPreviousAudioIndex,
-      playbackPosition: null,
-      playbackDuration: null,
-    });
-    storeAudioForNextOpening(audio, index);
+    await previousAudioPress(context);
   };
 
   useEffect(() => {
