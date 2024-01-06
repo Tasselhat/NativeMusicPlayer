@@ -3,24 +3,7 @@ import { StyleSheet, View, Text, Dimensions, TouchableWithoutFeedback } from "re
 import { Entypo } from "@expo/vector-icons";
 import color from "../misc/color";
 import { Feather } from "@expo/vector-icons";
-
-const convertTime = (minutes) => {
-  if (minutes) {
-    const hrs = minutes / 60;
-    const minute = hrs.toString().split(".")[0];
-    const percent = parseInt(hrs.toString().split(".")[1].slice(0, 2));
-    const sec = Math.ceil((60 * percent) / 100);
-
-    if (parseInt(minute) < 10 && sec < 10) {
-      return `0${minute}:0${sec}`;
-    }
-    if (parseInt(minute) < 10) {
-      return `0${minute}:${sec}`;
-    }
-
-    return `${minute}:${sec}`;
-  }
-};
+import { convertTime } from "../misc/helper";
 
 const renderPlayPauseIcon = (isPlaying) => {
   if (isPlaying) {

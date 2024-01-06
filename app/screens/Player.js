@@ -1,11 +1,18 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import PlayerButton from "../components/PlayerButton";
 import Screen from "../components/Screen";
 import { AudioContext } from "../context/AudioProvider";
-import { nextAudioPress, previousAudioPress, selectAudio } from "../controller/audioController";
+import {
+  pause,
+  nextAudioPress,
+  previousAudioPress,
+  selectAudio,
+  resume,
+  seek,
+} from "../controller/audioController";
 import color from "../misc/color";
 import { convertTime } from "../misc/helper";
 
@@ -13,6 +20,8 @@ const { width } = Dimensions.get("window");
 
 const Player = ({}) => {
   const context = useContext(AudioContext);
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [sliderThumbColor, setSliderThumbColor] = useState(color.FONT_MEDIUM);
 
   const { playbackPosition, playbackDuration } = context;
 
@@ -42,9 +51,18 @@ const Player = ({}) => {
     await previousAudioPress(context);
   };
 
+  const renderTime = () => {
+    return convertTime(context.playbackPosition / 1000);
+  };
+
   useEffect(() => {
     context.loadPreviousAudio();
-  }, []);
+    if (context.isPlaying) {
+      setSliderThumbColor(color.ACTIVE_BG);
+    } else {
+      setSliderThumbColor(color.FONT_MEDIUM);
+    }
+  }, [context.isPlaying]);
 
   if (!context.currentAudio) return null;
 
@@ -72,6 +90,7 @@ const Player = ({}) => {
               paddingHorizontal: 15,
             }}
           >
+            <Text>{currentPosition ? currentPosition : renderTime() || "00:00"} / </Text>
             <Text>{convertTime(context.currentAudio.duration)}</Text>
           </View>
           <Slider
@@ -79,6 +98,26 @@ const Player = ({}) => {
             minimumValue={0}
             maximumValue={1}
             value={calculateSeekBar()}
+            onValueChange={(value) => {
+              setCurrentPosition(convertTime(value * context.currentAudio.duration));
+            }}
+            onSlidingStart={async () => {
+              setSliderThumbColor(color.SECONDARY);
+              if (!context.isPlaying) {
+                return;
+              }
+              try {
+                await pause(context.playbackObj);
+              } catch (error) {
+                console.log("Error inside onSlidingStart", error.message);
+              }
+            }}
+            onSlidingComplete={async (value) => {
+              setSliderThumbColor(color.FONT_MEDIUM);
+              await seek(context, value);
+              setCurrentPosition(null);
+            }}
+            thumbTintColor={sliderThumbColor}
             minimumTrackTintColor={color.FONT_MEDIUM}
             maximumTrackTintColor={color.ACTIVE_BG}
           />
