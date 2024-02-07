@@ -132,6 +132,7 @@ export class AudioProvider extends Component {
           ({ id }) => id === this.state.currentAudio.id
         );
         const nextIndex = indexOnPlayList + 1;
+        const previousAudioIndex = indexOnPlayList;
         audio = this.state.activePlaylist.audios[nextIndex];
 
         if (!audio) audio = this.state.activePlaylist.audios[0];
@@ -144,6 +145,7 @@ export class AudioProvider extends Component {
           isPlaying: true,
           currentAudio: audio,
           currentAudioIndex: indexOnAllList,
+          previousAudioIndex: previousAudioIndex,
         });
       }
 
@@ -173,6 +175,28 @@ export class AudioProvider extends Component {
         previousAudioIndex: previousAudioIndex,
       });
     } else if (playbackStatus.didJustFinish && this.state.randomize) {
+      if (this.state.isPlaylistRunning) {
+        let audio;
+        const nextIndex = Math.floor(Math.random() * this.state.activePlaylist.audios.length);
+
+        const previousAudioIndex = this.state.currentAudioIndex;
+
+        audio = this.state.activePlaylist.audios[nextIndex];
+
+        if (!audio) audio = this.state.activePlaylist.audios[0];
+
+        const indexOnAllList = this.state.audioFiles.findIndex(({ id }) => id === audio.id);
+
+        const status = await playNext(this.state.playbackObj, audio.uri);
+        return this.updateState(this, {
+          soundObj: status,
+          isPlaying: true,
+          currentAudio: audio,
+          currentAudioIndex: indexOnAllList,
+          previousAudioIndex: previousAudioIndex,
+        });
+      }
+
       const nextAudioIndex = Math.floor(Math.random() * this.totalAudioCount);
       const previousAudioIndex = this.state.currentAudioIndex;
       //there is no next audio to play or the current audio is the last one
