@@ -24,10 +24,7 @@ const PlaylistDetail = (props) => {
   const [audios, setAudios] = useState(playList.audios);
 
   const playAudio = async (audio) => {
-    await selectAudio(audio, context, {
-      activePlayList: playList,
-      isPlayListRunning: true,
-    });
+    await selectAudio(audio, context, { activePlaylist: playList, isPlaylistRunning: true });
   };
 
   const closeModal = () => {
@@ -36,20 +33,20 @@ const PlaylistDetail = (props) => {
   };
   const removeAudio = async () => {
     let isPlaying = context.isPlaying;
-    let isPlayListRunning = context.isPlayListRunning;
+    let isPlaylistRunning = context.isPlaylistRunning;
     let soundObj = context.soundObj;
     let playbackPosition = context.playbackPosition;
-    let activePlayList = context.activePlayList;
+    let activePlaylist = context.activePlaylist;
 
-    if (context.isPlayListRunning && context.currentAudio.id === selectedItem.id) {
+    if (context.isPlaylistRunning && context.currentAudio.id === selectedItem.id) {
       // stop
       await context.playbackObj.stopAsync();
       await context.playbackObj.unloadAsync();
       isPlaying = false;
-      isPlayListRunning = false;
+      isPlaylistRunning = false;
       soundObj = null;
       playbackPosition = 0;
-      activePlayList = [];
+      activePlaylist = [];
     }
 
     const newAudios = audios.filter((audio) => audio.id !== selectedItem.id);
@@ -67,8 +64,8 @@ const PlaylistDetail = (props) => {
       AsyncStorage.setItem("playlist", JSON.stringify(updatedPlayLists));
       context.updateState(context, {
         playList: updatedPlayLists,
-        isPlayListRunning,
-        activePlayList,
+        isPlaylistRunning,
+        activePlaylist,
         playbackPosition,
         isPlaying,
         soundObj,
@@ -81,20 +78,20 @@ const PlaylistDetail = (props) => {
 
   const removePlaylist = async () => {
     let isPlaying = context.isPlaying;
-    let isPlayListRunning = context.isPlayListRunning;
+    let isPlaylistRunning = context.isPlaylistRunning;
     let soundObj = context.soundObj;
     let playbackPosition = context.playbackPosition;
-    let activePlayList = context.activePlayList;
+    let activePlaylist = context.activePlaylist;
 
-    if (context.isPlayListRunning && activePlayList.id === playList.id) {
+    if (context.isPlaylistRunning && activePlaylist.id === playList.id) {
       // stop
       await context.playbackObj.stopAsync();
       await context.playbackObj.unloadAsync();
       isPlaying = false;
-      isPlayListRunning = false;
+      isPlaylistRunning = false;
       soundObj = null;
       playbackPosition = 0;
-      activePlayList = [];
+      activePlaylist = [];
     }
 
     const result = await AsyncStorage.getItem("playlist");
@@ -105,8 +102,8 @@ const PlaylistDetail = (props) => {
       AsyncStorage.setItem("playlist", JSON.stringify(updatedPlayLists));
       context.updateState(context, {
         playList: updatedPlayLists,
-        isPlayListRunning,
-        activePlayList,
+        isPlaylistRunning,
+        activePlaylist,
         playbackPosition,
         isPlaying,
         soundObj,
@@ -144,7 +141,7 @@ const PlaylistDetail = (props) => {
                   duration={item.duration}
                   isPlaying={context.isPlaying}
                   activeListItem={item.id === context.currentAudio.id}
-                  onAudioPress={() => playAudio(item)}
+                  onPlayPress={() => playAudio(item)}
                   onOptionPress={() => {
                     setSelectedItem(item);
                     setModalVisible(true);

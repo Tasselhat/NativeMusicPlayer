@@ -21,6 +21,8 @@ export class AudioProvider extends Component {
       soundObj: null,
       currentAudio: {},
       isPlaying: false,
+      isPlaylistRunning: false,
+      activePlaylist: [],
       currentAudioIndex: null,
       previousAudioIndex: null,
       playbackPosition: null,
@@ -115,7 +117,36 @@ export class AudioProvider extends Component {
       });
     }
 
+    if (playbackStatus.isLoaded && !playbackStatus.isPlaying) {
+      storeAudioForNextOpening(
+        this.state.currentAudio,
+        this.state.currentAudioIndex,
+        playbackStatus.positionMillis
+      );
+    }
+
     if (playbackStatus.didJustFinish && !this.state.randomize) {
+      if (this.state.isPlaylistRunning) {
+        let audio;
+        const indexOnPlayList = this.state.activePlaylist.audios.findIndex(
+          ({ id }) => id === this.state.currentAudio.id
+        );
+        const nextIndex = indexOnPlayList + 1;
+        audio = this.state.activePlaylist.audios[nextIndex];
+
+        if (!audio) audio = this.state.activePlaylist.audios[0];
+
+        const indexOnAllList = this.state.audioFiles.findIndex(({ id }) => id === audio.id);
+
+        const status = await playNext(this.state.playbackObj, audio.uri);
+        return this.updateState(this, {
+          soundObj: status,
+          isPlaying: true,
+          currentAudio: audio,
+          currentAudioIndex: indexOnAllList,
+        });
+      }
+
       const nextAudioIndex = this.state.currentAudioIndex + 1;
       const previousAudioIndex = this.state.currentAudioIndex;
       //there is no next audio to play or the current audio is the last one
@@ -190,6 +221,8 @@ export class AudioProvider extends Component {
       soundObj,
       currentAudio,
       isPlaying,
+      isPlaylistRunning,
+      activePlaylist,
       currentAudioIndex,
       previousAudioIndex,
       playbackDuration,
@@ -219,6 +252,8 @@ export class AudioProvider extends Component {
           soundObj,
           currentAudio,
           isPlaying,
+          isPlaylistRunning,
+          activePlaylist,
           currentAudioIndex,
           previousAudioIndex,
           playbackDuration,

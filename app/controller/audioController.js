@@ -59,20 +59,23 @@ export const playNext = async (playbackObj, uri) => {
 
 //selecting audios
 
-export const selectAudio = async (audio, context) => {
+export const selectAudio = async (audio, context, playlistInfo = {}) => {
   const { playbackObj, soundObj, currentAudio, updateState, audioFiles, onPlaybackStatusUpdate } =
     context;
 
   try {
     //first play
     if (soundObj === null) {
-      const index = audioFiles.indexOf(audio);
       const status = await play(playbackObj, audio.uri);
+      const index = audioFiles.findIndex(({ id }) => id === audio.id);
       updateState(context, {
         currentAudio: audio,
         soundObj: status,
         isPlaying: true,
         currentAudioIndex: index,
+        isPlaylistRunning: false,
+        activePlaylist: [],
+        ...playlistInfo,
       });
       playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
       return storeAudioForNextOpening(audio, index);
@@ -97,13 +100,16 @@ export const selectAudio = async (audio, context) => {
     //new song
     if (soundObj?.isLoaded && currentAudio.id !== audio.id) {
       const status = await selectNew(playbackObj, audio.uri);
-      const index = audioFiles.indexOf(audio);
+      const index = audioFiles.findIndex(({ id }) => id === audio.id);
       updateState(context, {
         playbackObj: playbackObj,
         currentAudio: audio,
         soundObj: status,
         isPlaying: true,
         currentAudioIndex: index,
+        isPlaylistRunning: false,
+        activePlaylist: [],
+        ...playlistInfo,
       });
       return storeAudioForNextOpening(audio, index);
     }
@@ -117,6 +123,9 @@ export const selectAudio = async (audio, context) => {
         soundObj: status,
         isPlaying: true,
         currentAudioIndex: index,
+        isPlaylistRunning: false,
+        activePlaylist: [],
+        ...playlistInfo,
       });
       return storeAudioForNextOpening(audio, index);
     }
@@ -143,7 +152,7 @@ export const nextAudioPress = async (context) => {
     const { isLoaded } = await playbackObj.getStatusAsync();
     const previousAudioIndex = currentAudioIndex;
 
-    if (isPlaylistRunning) return nextAudioFromPlaylist(context);
+    if (isPlaylistRunning) return selectAudioFromPlayList(context, "next");
 
     if (randomize) {
       const nextAudioIndex = Math.floor(Math.random() * totalAudioCount);
@@ -215,7 +224,7 @@ export const previousAudioPress = async (context) => {
     isPlaylistRunning,
   } = context;
 
-  if (isPlaylistRunning) return previousAudioFromPlaylist(context);
+  if (isPlaylistRunning) return selectAudioFromPlayList(context, "previous");
 
   try {
     const { isLoaded } = await playbackObj.getStatusAsync();
@@ -266,62 +275,36 @@ export const previousAudioPress = async (context) => {
 
 //next audio from playlist
 
-export const nextAudioFromPlaylist = async (context) => {
-  const {
-    playbackObj,
-    updateState,
-    audioFiles,
-    currentAudioIndex,
-    onPlaybackStatusUpdate,
-    playlistAudios,
-    playlistAudioIndex,
-  } = context;
+const selectAudioFromPlayList = async (context, select) => {
+  const { activePlaylist, currentAudio, audioFiles, playbackObj, updateState } = context;
+  let audio;
+  let defaultIndex;
+  let nextIndex;
 
-  try {
-    const { isLoaded } = await playbackObj.getStatusAsync();
-    const previousAudioIndex = currentAudioIndex;
-    const isLastAudio = playlistAudioIndex + 1 === playlistAudios.length;
-    let audio = playlistAudios[playlistAudioIndex + 1];
-    let status;
-    let index;
+  const indexOnPlayList = activePlaylist.audios.findIndex(({ id }) => id === currentAudio.id);
 
-    if (!isLoaded && !isLastAudio) {
-      index = playlistAudioIndex + 1;
-      status = await play(playbackObj, audio.uri);
-    }
-
-    if (isLoaded && !isLastAudio) {
-      index = playlistAudioIndex + 1;
-      status = await playNext(playbackObj, audio.uri);
-    }
-
-    if (isLastAudio) {
-      index = 0;
-      audio = playlistAudios[index];
-      if (isLoaded) {
-        status = await playNext(playbackObj, audio.uri);
-      } else {
-        status = await play(playbackObj, audio.uri);
-      }
-    }
-
-    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
-    updateState(context, {
-      currentAudio: audio,
-      soundObj: status,
-      isPlaying: true,
-      currentAudioIndex: index,
-      previousAudioIndex: previousAudioIndex,
-      playbackPosition: null,
-      playbackDuration: null,
-      playlistAudioIndex: index,
-    });
-  } catch (error) {
-    console.log(
-      "Error inside nextAudioFromPlaylist helper method (audioController.js)",
-      error.message
-    );
+  if (select === "next") {
+    nextIndex = indexOnPlayList + 1;
+    defaultIndex = 0;
   }
+
+  if (select === "previous") {
+    nextIndex = indexOnPlayList - 1;
+    defaultIndex = activePlaylist.audios.length - 1;
+  }
+  audio = activePlaylist.audios[nextIndex];
+
+  if (!audio) audio = activePlaylist.audios[defaultIndex];
+
+  const indexOnAllList = audioFiles.findIndex(({ id }) => id === audio.id);
+
+  const status = await playNext(playbackObj, audio.uri);
+  return updateState(context, {
+    soundObj: status,
+    isPlaying: true,
+    currentAudio: audio,
+    currentAudioIndex: indexOnAllList,
+  });
 };
 
 //seek
