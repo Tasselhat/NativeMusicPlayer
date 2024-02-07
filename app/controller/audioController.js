@@ -10,10 +10,7 @@ export const play = async (playbackObj, uri) => {
       { shouldPlay: true, progressUpdateIntervalMillis: 1000 }
     );
   } catch (error) {
-    console.log(
-      "Error inside play helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside play helper method (audioController.js)", error.message);
   }
 };
 
@@ -25,10 +22,7 @@ export const selectNew = async (playbackObj, uri) => {
     await playbackObj.unloadAsync();
     return await play(playbackObj, uri);
   } catch (error) {
-    console.log(
-      "Error inside selectNew helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside selectNew helper method (audioController.js)", error.message);
   }
 };
 
@@ -37,10 +31,7 @@ export const pause = async (playbackObj) => {
   try {
     return await playbackObj.setStatusAsync({ shouldPlay: false });
   } catch (error) {
-    console.log(
-      "Error inside pause helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside pause helper method (audioController.js)", error.message);
   }
 };
 
@@ -50,10 +41,7 @@ export const resume = async (playbackObj) => {
   try {
     return await playbackObj.playAsync();
   } catch (error) {
-    console.log(
-      "Error inside resume helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside resume helper method (audioController.js)", error.message);
   }
 };
 
@@ -65,24 +53,15 @@ export const playNext = async (playbackObj, uri) => {
     await playbackObj.unloadAsync();
     return await play(playbackObj, uri);
   } catch (error) {
-    console.log(
-      "Error inside playNext helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside playNext helper method (audioController.js)", error.message);
   }
 };
 
 //selecting audios
 
 export const selectAudio = async (audio, context) => {
-  const {
-    playbackObj,
-    soundObj,
-    currentAudio,
-    updateState,
-    audioFiles,
-    onPlaybackStatusUpdate,
-  } = context;
+  const { playbackObj, soundObj, currentAudio, updateState, audioFiles, onPlaybackStatusUpdate } =
+    context;
 
   try {
     //first play
@@ -100,11 +79,7 @@ export const selectAudio = async (audio, context) => {
     }
 
     //pause
-    if (
-      soundObj?.isLoaded &&
-      soundObj.isPlaying &&
-      currentAudio.id === audio.id
-    ) {
+    if (soundObj?.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id) {
       const status = await pause(playbackObj);
       return updateState(context, {
         soundObj: status,
@@ -114,11 +89,7 @@ export const selectAudio = async (audio, context) => {
     }
 
     //resume
-    if (
-      soundObj?.isLoaded &&
-      !soundObj.isPlaying &&
-      currentAudio.id === audio.id
-    ) {
+    if (soundObj?.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id) {
       const status = await resume(playbackObj);
       return updateState(context, { soundObj: status, isPlaying: true });
     }
@@ -150,10 +121,7 @@ export const selectAudio = async (audio, context) => {
       return storeAudioForNextOpening(audio, index);
     }
   } catch (error) {
-    console.log(
-      "Error inside selectAudio helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside selectAudio helper method (audioController.js)", error.message);
   }
 };
 
@@ -168,11 +136,14 @@ export const nextAudioPress = async (context) => {
     onPlaybackStatusUpdate,
     randomize,
     totalAudioCount,
+    isPlaylistRunning,
   } = context;
 
   try {
     const { isLoaded } = await playbackObj.getStatusAsync();
     const previousAudioIndex = currentAudioIndex;
+
+    if (isPlaylistRunning) return nextAudioFromPlaylist(context);
 
     if (randomize) {
       const nextAudioIndex = Math.floor(Math.random() * totalAudioCount);
@@ -227,10 +198,7 @@ export const nextAudioPress = async (context) => {
     });
     storeAudioForNextOpening(audio, index);
   } catch (error) {
-    console.log(
-      "Error inside changeAudio helper method (audioController.js)",
-      error.message
-    );
+    console.log("Error inside changeAudio helper method (audioController.js)", error.message);
   }
 };
 
@@ -247,16 +215,13 @@ export const previousAudioPress = async (context) => {
     isPlaylistRunning,
   } = context;
 
-  if (isPlaylistRunning) return selectAudioFromPlaylist(context, select);
+  if (isPlaylistRunning) return previousAudioFromPlaylist(context);
 
   try {
     const { isLoaded } = await playbackObj.getStatusAsync();
     const newPreviousAudioIndex = currentAudioIndex;
 
-    const newIndex =
-      randomize && previousAudioIndex
-        ? previousAudioIndex
-        : currentAudioIndex - 1;
+    const newIndex = randomize && previousAudioIndex ? previousAudioIndex : currentAudioIndex - 1;
     const isFirstAudio = newIndex <= 0;
     let audio = audioFiles[newIndex];
     let status;
@@ -294,6 +259,66 @@ export const previousAudioPress = async (context) => {
   } catch (error) {
     console.log(
       "Error inside previousAudioPress helper method (audioController.js)",
+      error.message
+    );
+  }
+};
+
+//next audio from playlist
+
+export const nextAudioFromPlaylist = async (context) => {
+  const {
+    playbackObj,
+    updateState,
+    audioFiles,
+    currentAudioIndex,
+    onPlaybackStatusUpdate,
+    playlistAudios,
+    playlistAudioIndex,
+  } = context;
+
+  try {
+    const { isLoaded } = await playbackObj.getStatusAsync();
+    const previousAudioIndex = currentAudioIndex;
+    const isLastAudio = playlistAudioIndex + 1 === playlistAudios.length;
+    let audio = playlistAudios[playlistAudioIndex + 1];
+    let status;
+    let index;
+
+    if (!isLoaded && !isLastAudio) {
+      index = playlistAudioIndex + 1;
+      status = await play(playbackObj, audio.uri);
+    }
+
+    if (isLoaded && !isLastAudio) {
+      index = playlistAudioIndex + 1;
+      status = await playNext(playbackObj, audio.uri);
+    }
+
+    if (isLastAudio) {
+      index = 0;
+      audio = playlistAudios[index];
+      if (isLoaded) {
+        status = await playNext(playbackObj, audio.uri);
+      } else {
+        status = await play(playbackObj, audio.uri);
+      }
+    }
+
+    playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+    updateState(context, {
+      currentAudio: audio,
+      soundObj: status,
+      isPlaying: true,
+      currentAudioIndex: index,
+      previousAudioIndex: previousAudioIndex,
+      playbackPosition: null,
+      playbackDuration: null,
+      playlistAudioIndex: index,
+    });
+  } catch (error) {
+    console.log(
+      "Error inside nextAudioFromPlaylist helper method (audioController.js)",
       error.message
     );
   }

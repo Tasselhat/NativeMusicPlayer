@@ -115,7 +115,7 @@ const Player = ({}) => {
             onSlidingComplete={async (value) => {
               setSliderThumbColor(color.FONT_MEDIUM);
               await seek(context, value);
-              setCurrentPosition(null);
+              setCurrentPosition(0);
             }}
             thumbTintColor={sliderThumbColor}
             minimumTrackTintColor={color.FONT_MEDIUM}

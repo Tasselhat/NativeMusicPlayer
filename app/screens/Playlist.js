@@ -8,7 +8,7 @@ import PlaylistDetails from "../components/PlaylistDetails";
 
 let selectedPlaylist = {};
 
-const Playlist = ({}) => {
+const Playlist = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
 
@@ -89,7 +89,8 @@ const Playlist = ({}) => {
         });
     } else {
       selectedPlaylist = playlist;
-      setShowPlaylist(true);
+      // setShowPlaylist(true);
+      navigation.navigate("PlaylistDetails", playlist);
     }
   };
 

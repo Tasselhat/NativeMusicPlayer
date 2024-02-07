@@ -5,14 +5,16 @@ import React from "react";
 import AudioList from "../screens/AudioList";
 import Player from "../screens/Player";
 import Playlist from "../screens/Playlist";
+import PlaylistDetails from "../screens/PlaylistDetails";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-const PlayListScreen = () => {
+const PlaylistScreen = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PlayList" component={Playlist} />
+      <Stack.Screen name="Playlist" component={Playlist} />
+      <Stack.Screen name="PlaylistDetails" component={PlaylistDetails} />
     </Stack.Navigator>
   );
 };
@@ -40,7 +42,7 @@ const AppNavigator = () => {
       />
       <Tab.Screen
         name="Playlists"
-        component={PlayListScreen}
+        component={PlaylistScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="library-music" color={color} size={size} />

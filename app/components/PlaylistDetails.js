@@ -2,8 +2,13 @@ import { Dimensions, FlatList, Modal, StyleSheet, Text, View } from "react-nativ
 import React from "react";
 import colors from "../misc/color";
 import AudioListItem from "./AudioListItem";
+import { selectAudio } from "../controller/audioController";
 
 const PlaylistDetails = ({ modalVisible, playlist, onClose }) => {
+  const playAudio = (audio) => {
+    selectAudio(audio, context);
+  };
+
   return (
     <Modal visible={modalVisible} animationType="fade" onRequestClose={onClose} transparent>
       <View style={styles.container}>
@@ -16,7 +21,11 @@ const PlaylistDetails = ({ modalVisible, playlist, onClose }) => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 10 }}>
-              <AudioListItem title={item.filename} duration={item.duration} />
+              <AudioListItem
+                title={item.filename}
+                duration={item.duration}
+                onPlayPress={() => playAudio(item)}
+              />
             </View>
           )}
         ></FlatList>
