@@ -22,12 +22,17 @@ const Player = ({}) => {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [sliderThumbColor, setSliderThumbColor] = useState(color.FONT_MEDIUM);
 
-  const { playbackPosition, playbackDuration } = context;
+  const { currentAudio, playbackPosition, playbackDuration } = context;
 
   const calculateSeekBar = () => {
     if (playbackPosition !== null && playbackDuration !== null) {
       return playbackPosition / playbackDuration;
     }
+
+    if (currentAudio.lastPosition) {
+      return currentAudio.lastPosition / (currentAudio.duration * 1000);
+    }
+
     return 0;
   };
 
@@ -51,6 +56,9 @@ const Player = ({}) => {
   };
 
   const renderTime = () => {
+    if (!context.soundObj && currentAudio.lastPosition) {
+      return convertTime(currentAudio.lastPosition / 1000);
+    }
     return convertTime(context.playbackPosition / 1000);
   };
 

@@ -1,13 +1,17 @@
 import { storeAudioForNextOpening } from "../misc/helper";
 
 //play
-export const play = async (playbackObj, uri) => {
+export const play = async (playbackObj, uri, lastPosition = null) => {
   try {
-    await playbackObj.unloadAsync();
-    return await playbackObj.loadAsync(
-      { uri },
-      { shouldPlay: true, progressUpdateIntervalMillis: 400 }
-    );
+    if (!lastPosition) {
+      await playbackObj.unloadAsync();
+      return await playbackObj.loadAsync(
+        { uri },
+        { shouldPlay: true, progressUpdateIntervalMillis: 400 }
+      );
+    }
+    await playbackObj.loadAsync({ uri }, { shouldPlay: true, progressUpdateIntervalMillis: 400 });
+    return await playbackObj.playFromPositionAsync(lastPosition);
   } catch (error) {
     console.log("Error inside play helper method (audioController.js)", error.message);
   }
@@ -65,7 +69,7 @@ export const selectAudio = async (audio, context, playlistInfo = {}) => {
   try {
     //first play
     if (soundObj === null) {
-      const status = await play(playbackObj, audio.uri);
+      const status = await play(playbackObj, audio.uri, audio?.lastPosition);
       const index = audioFiles.findIndex(({ id }) => id === audio.id);
       updateState(context, {
         currentAudio: audio,
@@ -298,6 +302,7 @@ const selectAudioFromPlayList = async (context, select) => {
   const indexOnAllList = audioFiles.findIndex(({ id }) => id === audio.id);
 
   const status = await playNext(playbackObj, audio.uri);
+  playbackObj.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
   return updateState(context, {
     soundObj: status,
     isPlaying: true,
