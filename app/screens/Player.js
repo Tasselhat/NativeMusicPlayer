@@ -6,12 +6,11 @@ import PlayerButton from "../components/PlayerButton";
 import Screen from "../components/Screen";
 import { AudioContext } from "../context/AudioProvider";
 import {
-  pause,
   nextAudioPress,
+  pause,
   previousAudioPress,
-  selectAudio,
-  resume,
   seek,
+  selectAudio,
 } from "../controller/audioController";
 import color from "../misc/color";
 import { convertTime } from "../misc/helper";
@@ -69,9 +68,19 @@ const Player = ({}) => {
   return (
     <Screen>
       <View style={styles.container}>
-        <Text style={styles.audioCount}>{`${context.currentAudioIndex + 1}/${
-          context.totalAudioCount
-        }`}</Text>
+        <View style={styles.audioCountContainer}>
+          <View style={{ flexDirection: "row" }}>
+            {context.isPlaylistRunning && (
+              <>
+                <Text style={{ fontWeight: "bold" }}>Playing From Playlist:</Text>
+                <Text style={{ paddingHorizontal: 4 }}>{context.activePlaylist.title}</Text>
+              </>
+            )}
+          </View>
+          <Text style={styles.audioCount}>{`${context.currentAudioIndex + 1}/${
+            context.totalAudioCount
+          }`}</Text>
+        </View>
         <View style={styles.midBanner}>
           <MaterialCommunityIcons
             name="music-circle"
@@ -149,6 +158,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  audioCountContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 15,
   },
   audioCount: {
     fontSize: 24,

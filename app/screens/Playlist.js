@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, FlatList, TouchableOpacity, View } from "react-native";
-import colors from "../misc/color";
-import PlaylistAddModal from "../components/PlaylistAddModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AudioContext } from "../context/AudioProvider";
+import React, { useContext, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import PlaylistAddModal from "../components/PlaylistAddModal";
 import PlaylistDetails from "../components/PlaylistDetails";
+import { AudioContext } from "../context/AudioProvider";
+import colors from "../misc/color";
 
 let selectedPlaylist = {};
 

@@ -1,4 +1,3 @@
-import { Audio } from "expo-av";
 import { storeAudioForNextOpening } from "../misc/helper";
 
 //play
@@ -7,7 +6,7 @@ export const play = async (playbackObj, uri) => {
     await playbackObj.unloadAsync();
     return await playbackObj.loadAsync(
       { uri },
-      { shouldPlay: true, progressUpdateIntervalMillis: 1000 }
+      { shouldPlay: true, progressUpdateIntervalMillis: 400 }
     );
   } catch (error) {
     console.log("Error inside play helper method (audioController.js)", error.message);

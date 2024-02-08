@@ -1,19 +1,11 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useContext, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  Modal,
-  FlatList,
-  Text,
-  Dimensions,
-  TouchableOpacity,
-} from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import AudioListItem from "../components/AudioListItem";
+import OptionModal from "../components/OptionsModal";
+import { AudioContext } from "../context/AudioProvider";
 import { selectAudio } from "../controller/audioController";
 import color from "../misc/color";
-import AudioListItem from "../components/AudioListItem";
-import { AudioContext } from "../context/AudioProvider";
-import OptionModal from "../components/OptionsModal";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PlaylistDetail = (props) => {
   const context = useContext(AudioContext);
