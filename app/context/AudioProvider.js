@@ -3,7 +3,7 @@ import React, { Component, createContext } from "react";
 import { Text, View, Alert } from "react-native";
 import { DataProvider } from "recyclerlistview";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Audio } from "expo-av";
+import { Audio } from "../misc/avCompat";
 import { storeAudioForNextOpening } from "../misc/helper";
 import { playNext } from "../controller/audioController";
 
